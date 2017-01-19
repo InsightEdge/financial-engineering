@@ -1,12 +1,13 @@
 name := "financial-engineering"
 
-version := "1.1.0-SNAPSHOT"
+version := "1.0.0-SNAPSHOT"
 
-scalaVersion := "2.10.6"
+scalaVersion := "2.10.4"
 
-val insightEdgeVersion = "1.1.0-SNAPSHOT"
+val insightEdgeVersion = "1.0.0"
 
 resolvers += Resolver.mavenLocal
+
 resolvers += "Openspaces Maven Repository" at "http://maven-repository.openspaces.org"
 
 libraryDependencies ++= Seq(
@@ -16,7 +17,7 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.0" % "test"
 )
 
-test in assembly := {}
+// test in assembly := {}
 
 assemblyOutputPath in assembly := new File(s"target/financial-engineering.jar")
 
