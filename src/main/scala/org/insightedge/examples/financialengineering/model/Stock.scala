@@ -17,7 +17,7 @@ case class Stock(@SpaceId(autoGenerate = true)
                  @BeanProperty
                  var cusipNumber: Int,
                  @BeanProperty
-                 var lastUpdateMs: Long) extends Asset{
+                 var lastUpdateMs: Long) {
 
   def this() = this(null, null, -1, -1, -1)
 

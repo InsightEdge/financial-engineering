@@ -19,8 +19,19 @@ case class MarketReturn(
                          @BeanProperty
                          var timestampMs: Long,
                          @BeanProperty
-                         var percentageRateOfReturn: Double
+                         var percentageRateOfReturn: Double,
+                         @BeanProperty
+                         var processed: Boolean = false
                        ) {
-  def this() = this(null, -1, -1)
-
+  def this() = this(null, -1, -1, false)
 }
+
+/**
+  *
+  * Jobs:
+  *
+  * IndividualReturn  (x / symbol) // Jason
+  * MarketReturn (y / tick) // ?? Sudip
+  * PollingContainer?? for (a,b,e)(symbol)(t) ??? // Jason
+  *
+  */

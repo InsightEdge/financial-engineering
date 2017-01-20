@@ -20,9 +20,9 @@ case class Trade(@SpaceId(autoGenerate = true)
                  @BeanProperty
                  var sellPrice: Double,
                  @BeanProperty
-                 var buyDateMs: Long,
+                 var buyDateMs: Long, // tickTime - 1 mo
                  @BeanProperty
-                 var endDateMs: Long,
+                 var endDateMs: Long,   // tickTime
                  @BeanProperty
                  var buyCost: Double = 0,
                  @BeanProperty

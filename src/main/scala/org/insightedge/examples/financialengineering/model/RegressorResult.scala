@@ -10,11 +10,14 @@ import scala.beans.BeanProperty
   * Time: 6:00 PM
 ``  */
 
-case class RegressionResult(@SpaceId(autoGenerate = false)
+case class RegressorResult(@SpaceId(autoGenerate = false)
                             @BeanProperty var id: String,
                             @BeanProperty var alpha: Double,
                             @BeanProperty var beta: Double,
-                            @BeanProperty var epsilon: Double) {
-  def this() = this(null, -1, -1, -1)
+                            @BeanProperty var epsilon: Double,
+                            @BeanProperty var tickTimestampMs: Long) {
+  def this() = this(null, -1, -1, -1, -1)
 
 }
+
+

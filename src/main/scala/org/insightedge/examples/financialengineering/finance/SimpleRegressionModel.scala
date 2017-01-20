@@ -17,22 +17,31 @@ class SimpleRegressionModel {
     * @return alpha, beta and epsilon
     */
   def leastSquares(xsAndYs: List[(Double, Double)]): (Double, Double, Double) = {
-    def b(xsAndYs: List[(Double, Double)]): Double = {
-      0
+    val z = 0d
+
+    def bSumOfXSumOfY(xsAndYs: List[(Double, Double)]): (Double, Double, Double) = {
+      val n = xsAndYs.length.toDouble
+      val sumOfProducts = xsAndYs.foldLeft(z) { (a, i: (Double, Double)) => a + i._1 * i._2 }
+      val sumOfXs = xsAndYs.foldLeft(z) { (a, i: (Double, Double)) => a + i._1 }
+      val sumOfYs = xsAndYs.foldLeft(z) { (a, i: (Double, Double)) => a + i._2 }
+      val numerator = sumOfProducts - sumOfXs * sumOfYs / n
+      val sumOfXsquared = xsAndYs.foldLeft(z) { (a, i: (Double, Double)) => a + i._1 * i._1 }
+      val demnominator = sumOfXsquared - sumOfXs * sumOfXs / n
+      (numerator / demnominator, sumOfXs, sumOfYs)
     }
-    def a(xsAndYs: List[(Double, Double)], b: Double): Double = {
-      val  n = xsAndYs.size
-      val sumsOfXandY = xsAndYs.foldLeft(0d)(((o:Double,t:Double) => o + t))
+
+    def a(xsAndYs: List[(Double, Double)], sumOfXs: Double, sumOfYs: Double, b: Double): Double = {
+      (sumOfYs - b * sumOfXs) / xsAndYs.length
     }
 
     def epsilon(xsAndYs: List[(Double, Double)]): Double = {
       0
     }
 
-    val b = b(xsAndYs)
-    val a = a(xsAndYs, b)
+    val (bVal, sumX, sumY) = bSumOfXSumOfY(xsAndYs)
+    val aVal: Double = a(xsAndYs, sumX, sumY, bVal)
 
-    (a, b, epsilon(xsAndYs))
+    (aVal, bVal, epsilon(xsAndYs))
   }
 
 }

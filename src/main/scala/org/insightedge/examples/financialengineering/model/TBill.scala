@@ -28,7 +28,7 @@ case class TBill(@SpaceId(autoGenerate = true)
                  @BeanProperty
                  var cusipNumber: Int,
                  @BeanProperty
-                 var timestampMs: Long) extends Asset{
+                 var timestampMs: Long){
 
   def this() = this(null, -1, -1, -1, -1, -1, -1)
 

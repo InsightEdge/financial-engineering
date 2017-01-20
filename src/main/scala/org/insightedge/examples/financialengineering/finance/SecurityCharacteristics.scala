@@ -1,6 +1,6 @@
 package org.insightedge.examples.financialengineering.finance
 
-import org.insightedge.examples.financialengineering.model.{RegressionResult, Stock, Trade}
+import org.insightedge.examples.financialengineering.model.{RegressorResult, Stock, Trade}
 import org.insightedge.scala.annotation.SpaceId
 
 import scala.beans.BeanProperty
@@ -36,6 +36,7 @@ import scala.beans.BeanProperty
   *
   * @see https://en.wikipedia.org/wiki/Security_characteristic_line
   * @see http://faculty.smu.edu/tfomby/eco5350/data/Lecture_Notes/Least%20Squares%20and%20the%20SCL.pdf
+  *
   */
 class SecurityCharacteristics {
 
@@ -85,7 +86,7 @@ class SecurityCharacteristics {
     } / returns.length
   }
 
-  def simpleRegressionModel(): RegressionResult = {
+  def simpleRegressionModel(): RegressorResult = {
     null
   }
 
