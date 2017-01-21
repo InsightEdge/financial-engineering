@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    top level element of the Spring configuration. Note the multiple namespace definition for both
+    GigaSpaces and Spring. You can simply copy and paste this portion of the pu.xml file
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:os-core="http://www.openspaces.org/schema/core"
+       xmlns:os-events="http://www.openspaces.org/schema/events"
+       xmlns:os-remoting="http://www.openspaces.org/schema/remoting"
+       xmlns:os-sla="http://www.openspaces.org/schema/sla"
+       xsi:schemaLocation="
+   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
+   http://www.openspaces.org/schema/core http://www.openspaces.org/schema/12.0/core/openspaces-core.xsd
+   http://www.openspaces.org/schema/events http://www.openspaces.org/schema/12.0/events/openspaces-events.xsd
+   http://www.openspaces.org/schema/remoting http://www.openspaces.org/schema/12.0/remoting/openspaces-remoting.xsd
+   http://www.openspaces.org/schema/sla http://www.openspaces.org/schema/12.0/sla/openspaces-sla.xsd">
+
+    <context:component-scan base-package="org.insightedge.examples.financialengineering"/>
+
+    <!-- Enables to configure Spring beans through annotations   -->
+    <context:annotation-config />
+
+    <!-- Enable @PostPrimary and others annotation support. -->
+    <os-core:annotation-support />
+
+    <!-- Enables using @Polling and @Notify annotations to creating polling and notify containers  -->
+    <os-events:annotation-support />
+
+    <!--
+        A bean representing a Space. Here we configure an embedded space. Note
+        that we do not specify here the cluster topology of the Space. It is
+        declared by the os-sla:sla element of this pu.xml file.
+    -->
+    <os-core:embedded-space id="fin-eng-space" name="finEngSpace"/>
+
+    <!-- Defines a distributed transaction manager.-->
+    <os-core:distributed-tx-manager id="transactionManager" />
+
+    <!-- Define the GigaSpace instance that the application will use to access the space  -->
+    <os-core:giga-space id="gigaSpace" space="fin-eng-space" tx-manager="transactionManager"/>
+
+</beans>
+

@@ -2,11 +2,13 @@ package org.insightedge.examples.financialengineering.jobs
 
 import org.apache.spark.SparkContext
 import org.apache.spark.streaming.StreamingContext
-import org.insightedge.examples.financialengineering.{Settings, makeStreamingContext}
+import org.insightedge.examples.financialengineering.{Settings, SpaceUsage, makeStreamingContext}
 import org.insightedge.examples.financialengineering.model._
 import org.insightedge.spark.implicits.all._
 import InvestmentHelp.Help
 import TickDataHelp.Help
+import com.gigaspaces.client.{ChangeSet, WriteModifiers}
+import com.gigaspaces.query.IdQuery
 
 import scala.collection.mutable
 
@@ -18,7 +20,7 @@ import scala.collection.mutable
   *
   * Turns [[TickData]] into [[InvestmentReturn]]s.
   */
-class CalcIndividualReturns  {
+class CalcIndividualReturns extends SpaceUsage {
 
   private val streamingCtx: StreamingContext =
     makeStreamingContext(
@@ -26,6 +28,7 @@ class CalcIndividualReturns  {
       Settings.calcIndividualContextFrequencyMilliseconds
     )
   private val sc = streamingCtx.sparkContext
+  private val space = makeClusteredProxy()
 
   def main(args: Array[String]): Unit = {
 
@@ -37,17 +40,21 @@ class CalcIndividualReturns  {
 
         val tdRdd = sc.gridSql[TickData](s"WHERE symbol = '$sym' AND processed = false")
 
-        val returns: mutable.LinkedList[InvestmentReturn] = mutable.LinkedList[InvestmentReturn]()
+        val returns = mutable.LinkedList[InvestmentReturn]()
+        val ticksToRetire = mutable.LinkedList[TickData]()
 
         val itr = tdRdd.map(td =>
           (monthAgoTick(td), td)
         ).collect().toIterator
 
         while (itr.hasNext) {
-          val n = itr.next
-          val i = n._1.toInvestment(n._2)
-          returns ++ List(InvestmentReturn(null, i.endDateMs, i.id, i.CAGR()))
+          val next = itr.next
+          val orig = next._2
+          val asInv = orig.toInvestment(next._1)
+          returns ++ List(InvestmentReturn(null, asInv.endDateMs, asInv.id, asInv.CAGR()))
+          retire(orig)
         }
+        space.writeMultiple(ticksToRetire.toArray, WriteModifiers.UPDATE_ONLY)
 
         streamingCtx.sparkContext.parallelize(returns).saveToGrid()
 
@@ -75,6 +82,10 @@ class CalcIndividualReturns  {
       s"AND timestampMs >= $oldTime" +
       "ORDER BY timestampMs DESC")
     oldTick.first
+  }
+
+  private def retire(tick: TickData): Unit = {
+    space.asyncChange(new IdQuery(tick.getClass, tick.id), new ChangeSet().set("processed", true))
   }
 
 }

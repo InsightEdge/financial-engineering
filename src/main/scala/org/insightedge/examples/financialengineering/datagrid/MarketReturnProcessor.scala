@@ -18,7 +18,7 @@ import org.openspaces.events.polling.Polling
   * arrived at the same time (same tick).
   */
 @EventDriven
-@Polling
+@Polling(concurrentConsumers = 3, maxConcurrentConsumers = 5)
 class MarketReturnProcessor {
 
   @EventTemplate
@@ -27,6 +27,6 @@ class MarketReturnProcessor {
   }
 
   @SpaceDataEvent
-  def listener(): MarketReturn = ???
+  def listener(marketReturn: MarketReturn): MarketReturn = ???
 
 }

@@ -29,7 +29,7 @@ object TickerSymbols extends SpaceUsage {
   private val ingestionPropName: String = TickerSymbolProperties.ingestionPropName
   private val clazz = classTag[TickerSymbol].runtimeClass.asInstanceOf[Class[TickerSymbol]]
 
-  var tickerSymbolCount: Int = _
+  var tickerSymbolCount: Int = 0
 
   def all(): List[TickerSymbol] = {
     // List(TickerSymbol("F"), TickerSymbol("KO"), TickerSymbol("GE"))
