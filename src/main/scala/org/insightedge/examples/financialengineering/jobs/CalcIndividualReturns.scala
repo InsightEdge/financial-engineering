@@ -1,12 +1,14 @@
 package org.insightedge.examples.financialengineering.jobs
 
+import java.time.Duration
+
 import org.apache.spark.SparkContext
 import org.apache.spark.streaming.StreamingContext
 import org.insightedge.examples.financialengineering.{Settings, SpaceUsage, makeStreamingContext}
 import org.insightedge.examples.financialengineering.model._
 import org.insightedge.spark.implicits.all._
-import InvestmentHelp.Help
-import TickDataHelp.Help
+import InvestmentHelp._
+import TickDataHelp._
 import com.gigaspaces.client.{ChangeSet, WriteModifiers}
 import com.gigaspaces.query.IdQuery
 
@@ -44,14 +46,17 @@ class CalcIndividualReturns extends SpaceUsage {
         val ticksToRetire = mutable.LinkedList[TickData]()
 
         val itr = tdRdd.map(td =>
-          (monthAgoTick(td), td)
+          (monthAgoTick(td, tickerSymbol, sc), td)
         ).collect().toIterator
 
         while (itr.hasNext) {
           val next = itr.next
           val orig = next._2
-          val asInv = orig.toInvestment(next._1)
-          returns ++ List(InvestmentReturn(null, asInv.endDateMs, asInv.id, asInv.CAGR()))
+          //          val asInv = orig.toInvestment(next._1) For some reason our implicit classes make the compiler angry
+          val asInv = toInvestment(orig, next._1)
+          //          returns ++ List(InvestmentReturn(null, asInv.endDateMs, asInv.id, asInv.CAGR()))
+          val cagr = compoundAnnualGrowthRate(asInv)
+          returns ++ List(InvestmentReturn(null, asInv.endDateMs, asInv.id, cagr))
           retire(orig)
         }
         space.writeMultiple(ticksToRetire.toArray, WriteModifiers.UPDATE_ONLY)
@@ -72,7 +77,7 @@ class CalcIndividualReturns extends SpaceUsage {
 
   private val msIn5Minutes = 60 * 1000 * 5
 
-  private def monthAgoTick(newTick: TickData)(implicit tickerSymbol: TickerSymbol, sc: SparkContext): TickData = {
+  private def monthAgoTick(newTick: TickData, tickerSymbol: TickerSymbol, sc: SparkContext): TickData = {
     val sym = tickerSymbol.abbreviation
     val newTime = newTick.timestampMs - Settings.msPerMonth
     val oldTime = newTime - msIn5Minutes
@@ -86,6 +91,57 @@ class CalcIndividualReturns extends SpaceUsage {
 
   private def retire(tick: TickData): Unit = {
     space.asyncChange(new IdQuery(tick.getClass, tick.id), new ChangeSet().set("processed", true))
+  }
+
+  /**
+    * Copied from [[InvestmentHelp]]
+    */
+  def duration(i: Investment): Duration = {
+    // 1440000 / 518400000
+    Duration.ofMillis(i.endDateMs - i.startDateMs)
+  }
+
+  /**
+    * Copied from [[InvestmentHelp]]
+    */
+  def years(i: Investment): Double = {
+    (i.endDateMs - i.startDateMs) / (Settings.daysPerYear * Settings.msPerDay.toDouble)
+  }
+
+  /**
+    * Copied from [[InvestmentHelp]]
+    */
+  def compoundAnnualGrowthRate(i: Investment): Double = {
+    math.pow((i.sellPrice + i.dividendsDuringTerm - i.buyCost - i.sellCost) / i.buyPrice, 1 / years(i)) - 1
+  }
+
+
+  /**
+    * Copied from [[TickDataHelp]]
+    */
+  def toInvestment(d: TickData, d2: TickData): Investment = {
+    var first: TickData = null
+    var second: TickData = null
+    if (isEarlierThan(d2, d)) {
+      first = d2
+      second = d
+    } else {
+      first = d
+      second = d2
+    }
+    Investment(null,
+      buyPrice = first.close,
+      sellPrice = second.open,
+      startDateMs = first.timestampMs,
+      endDateMs = second.timestampMs
+    )
+  }
+
+  /**
+    * Copied from [[TickDataHelp]]
+    */
+  def isEarlierThan(d: TickData, d2: TickData): Boolean = {
+    d2.timestampMs > d.timestampMs
   }
 
 }

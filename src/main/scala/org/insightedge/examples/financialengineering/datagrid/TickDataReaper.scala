@@ -4,11 +4,11 @@ import javax.annotation.Resource
 
 import com.gigaspaces.query.IdQuery
 import com.j_spaces.core.client.SQLQuery
-import org.insightedge.examples.financialengineering.model.{MarketReturn, TickData}
+import org.insightedge.examples.financialengineering.model.TickData
 import org.openspaces.core.GigaSpace
 import org.openspaces.events.adapter.SpaceDataEvent
-import org.openspaces.events.{EventDriven, EventTemplate}
 import org.openspaces.events.polling.Polling
+import org.openspaces.events.{EventDriven, EventTemplate}
 
 /**
   * Created by IntelliJ IDEA.
@@ -21,7 +21,7 @@ import org.openspaces.events.polling.Polling
 class TickDataReaper {
 
   @Resource
-  private val space: GigaSpace = _
+  private var space: GigaSpace = _
 
   @EventTemplate
   def template(): SQLQuery[TickData] = {

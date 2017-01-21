@@ -22,9 +22,11 @@ case class MarketReturn(
                          @BeanProperty
                          var percentageRateOfReturn: Double,
                          @BeanProperty
+                         var variance: Double,
+                         @BeanProperty
                          var processed: Boolean = false
                        ) {
-  def this() = this(null, -1, -1, false)
+  def this() = this(null, -1, -1, -1, false)
 }
 
 /**

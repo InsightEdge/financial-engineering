@@ -43,22 +43,22 @@ object Ingest extends SpaceUsage {
           Set(tickerSymbol.abbreviation)
         )
 
-        val tickData: DStream[TickData] = ticker.map[TickData] { packet =>
-          val tick = packet._2.asInstanceOf[MarketTick]
-          val td = TickData(id=null,
-            symbol=tickerSymbol.abbreviation,
-            timestampMs = tick.timestamp,
-            close = tick.close,
-            volume = tick.volume,
-            earnings = tick.earnings,
-            dividends = tick.dividends,
-            open = tick.open
-          )
-          println(s"Ingested tick data: $td")
-          td
-        }
-        tickData.foreachRDD(println(_))
-        tickData.saveToGrid()
+//        val tickData: DStream[TickData] = ticker.map[TickData] { packet =>
+//          val tick = packet._2.asInstanceOf[MarketTick]
+//          val td = TickData(id=null,
+//            symbol=tickerSymbol.abbreviation,
+//            timestampMs = tick.timestamp,
+//            close = tick.close,
+//            volume = tick.volume,
+//            earnings = tick.earnings,
+//            dividends = tick.dividends,
+//            open = tick.open
+//          )
+//          println(s"Ingested tick data: $td")
+//          td
+//        }
+//        tickData.foreachRDD(println(_))
+//        tickData.saveToGrid()
 
 //        val countDStream:DStream[Long] = tickData.count()
 //        println("XXXXXXXXX: Number of tick data processed: ")
