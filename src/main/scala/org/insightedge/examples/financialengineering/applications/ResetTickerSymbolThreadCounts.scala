@@ -18,11 +18,12 @@ object ResetTickerSymbolThreadCounts extends SpaceUsage {
 
   def main(args: Array[String]): Unit = {
     TickerSymbols.all() foreach { sym =>
-      val abbr  = sym.abbreviation
+      val abbr = sym.abbreviation
       val qry = TickerSymbols.makeIdQuery(sym)
       val set = new ChangeSet()
         .set(TickerSymbolProperties.feedPropertyName, 0)
-        .set(TickerSymbolProperties.ingestionPropertyName, 0)
+        .set(TickerSymbolProperties.calcIndividualPropertyName, 0)
+        .set(TickerSymbolProperties.calcMarketReturnPropertyName, 0)
         .set(TickerSymbolProperties.tickPropertyName, 0)
       println(s"Resetting TickerSymbol Thread counts for '$abbr' in space.")
       space.change(qry, set)

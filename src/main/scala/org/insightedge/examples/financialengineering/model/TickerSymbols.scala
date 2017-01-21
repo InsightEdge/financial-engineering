@@ -20,23 +20,31 @@ class TickerSymbols
 
 object TickerSymbols extends SpaceUsage {
 
-  val random = new Random(System.currentTimeMillis())
-  val space: GigaSpace = makeClusteredProxy()
+  private val random = new Random(System.currentTimeMillis())
+  private val space: GigaSpace = makeClusteredProxy()
 
-  private val tickPropName: String = TickerSymbolProperties.tickPropertyName
+  private val calcMarketPropName: String = TickerSymbolProperties.tickPropertyName
+  private val calcIndividualPropName: String = TickerSymbolProperties.calcIndividualPropertyName
   private val feedPropName: String = TickerSymbolProperties.feedPropertyName
-  private val ingestionPropName: String = TickerSymbolProperties.ingestionPropertyName
+  private val ingestionPropName: String = TickerSymbolProperties.ingestionPropName
   private val clazz = classTag[TickerSymbol].runtimeClass.asInstanceOf[Class[TickerSymbol]]
+
+  var tickerSymbolCount: Int = _
 
   def all(): List[TickerSymbol] = {
     // List(TickerSymbol("F"), TickerSymbol("KO"), TickerSymbol("GE"))
     val qry = new SQLQuery[TickerSymbol](clazz, "")
     val symbolsArray: Array[TickerSymbol] = space.readMultiple(qry)
+    tickerSymbolCount = symbolsArray.length
     symbolsArray.toList
   }
 
-  def provideTickerSymbolForTickProcessor(): Option[TickerSymbol] = {
-    provideSymbol(tickPropName)
+  def provideTickerSymbolForCalcMarketReturn(): Option[TickerSymbol] = {
+    provideSymbol(calcMarketPropName)
+  }
+
+  def provideTickerSymbolForCalcIndividualReturn(): Option[TickerSymbol] = {
+    provideSymbol(calcIndividualPropName)
   }
 
   def provideTickerSymbolForFeed(): Option[TickerSymbol] = {
@@ -50,7 +58,7 @@ object TickerSymbols extends SpaceUsage {
   private def provideSymbol(propertyName: String): Option[TickerSymbol] = {
     val available = all()
       .filter(!isLocked(_, propertyName))
-//      .filter(_.abbreviation == "GT") // TODO delete
+    //      .filter(_.abbreviation == "GT") // TODO delete
     val len = available.length
     if (len == 0) None
     else {
@@ -71,9 +79,14 @@ object TickerSymbols extends SpaceUsage {
     tickerSymbol.feedThreadCount = tickerSymbol.feedThreadCount + 1
   }
 
-  private def decrementTickProcessorThreadCount(tickerSymbol: TickerSymbol): Unit = {
-    space.asyncChange(makeIdQuery(tickerSymbol), new ChangeSet().decrement(tickPropName, 1))
-    tickerSymbol.tickProcessorThreadCount = tickerSymbol.tickProcessorThreadCount + 1
+  private def decrementCalcIndividualReturnThreadCount(tickerSymbol: TickerSymbol): Unit = {
+    space.asyncChange(makeIdQuery(tickerSymbol), new ChangeSet().decrement(calcIndividualPropName, 1))
+    tickerSymbol.calcIndividualReturnThreadCount = tickerSymbol.calcIndividualReturnThreadCount + 1
+  }
+
+  private def decrementCalcMarketReturnThreadCount(tickerSymbol: TickerSymbol): Unit = {
+    space.asyncChange(makeIdQuery(tickerSymbol), new ChangeSet().decrement(calcMarketPropName, 1))
+    tickerSymbol.calcMarketReturnThreadCount = tickerSymbol.calcMarketReturnThreadCount + 1
   }
 
   private def decrement(tickerSymbol: TickerSymbol, propertyName: String): Unit = {
@@ -82,8 +95,10 @@ object TickerSymbols extends SpaceUsage {
         decrementIngestionThreadCount(tickerSymbol)
       case `feedPropName` =>
         decrementFeedThreadCount(tickerSymbol)
-      case `tickPropName` =>
-        decrementTickProcessorThreadCount(tickerSymbol)
+      case `calcIndividualPropName` =>
+        decrementCalcIndividualReturnThreadCount(tickerSymbol)
+      case `calcMarketPropName` =>
+        decrementCalcMarketReturnThreadCount(tickerSymbol)
       case _ =>
         val msg = s"The '$propertyName' type is not supported by this implementation."
         System.out.println(msg)
@@ -99,11 +114,15 @@ object TickerSymbols extends SpaceUsage {
     returnSymbol(tickerSymbol, ingestionPropName)
   }
 
-  def returnSymbolFromTickProcessor(tickerSymbol: TickerSymbol): Unit = {
-    returnSymbol(tickerSymbol, tickPropName)
+  def returnSymbolFromCalcIndividualReturn(tickerSymbol: TickerSymbol): Unit = {
+    returnSymbol(tickerSymbol, calcIndividualPropName)
   }
 
-  def returnSymbolFromFeed(symbol: TickerSymbol):Unit = {
+  def returnSymbolFromCalcMarketReturn(tickerSymbol: TickerSymbol): Unit = {
+    returnSymbol(tickerSymbol, calcMarketPropName)
+  }
+
+  def returnSymbolFromFeed(symbol: TickerSymbol): Unit = {
     returnSymbol(symbol, feedPropName)
   }
 
@@ -113,11 +132,13 @@ object TickerSymbols extends SpaceUsage {
         tickerSymbol.ingestionThreadCount >= Settings.ingestionThreadsPerSymbol
       case `feedPropName` =>
         tickerSymbol.feedThreadCount >= 1
-      /* Until individual file processing is multi-threaded, we'll leave feed
-       * thread limit as 1 per symbol to prevent errors
+      /* Unless file processing becomes multi-threaded, we'll leave feed
+       * Thread limit as 1 per symbol to prevent errors
        */
-      case `tickPropName` =>
-        tickerSymbol.tickProcessorThreadCount >= Settings.processTicksThreads
+      case `calcIndividualPropName` =>
+        tickerSymbol.calcIndividualReturnThreadCount >= Settings.calcIndividualThreadsPerSymbol
+      case `calcMarketPropName` =>
+        tickerSymbol.calcMarketReturnThreadCount >= Settings.calcMarketReturnThreadsPerSymbol
       case _ =>
         throw new IllegalStateException(s"No property name match for $propertyName.")
     }
@@ -129,8 +150,10 @@ object TickerSymbols extends SpaceUsage {
         incrementIngestionThreadCount(tickerSymbol)
       case `feedPropName` =>
         incrementFeedThreadCount(tickerSymbol)
-      case `tickPropName` =>
-        incrementTickProcessorThreadCount(tickerSymbol)
+      case `calcIndividualPropName` =>
+        incrementCalcIndividualReturnThreadCount(tickerSymbol)
+      case `calcMarketPropName` =>
+        incrementCalcMarketReturnThreadCount(tickerSymbol)
       case _ =>
         val msg = s"The '$propertyName' type is not supported by this implementation."
         System.out.println(msg)
@@ -164,9 +187,14 @@ object TickerSymbols extends SpaceUsage {
     new IdQuery[TickerSymbol](clazz, tickerSymbol.abbreviation)
   }
 
-  private def incrementTickProcessorThreadCount(tickerSymbol: TickerSymbol): Unit = {
-    space.asyncChange(makeIdQuery(tickerSymbol), new ChangeSet().increment(tickPropName, 1))
-    tickerSymbol.tickProcessorThreadCount = tickerSymbol.tickProcessorThreadCount + 1
+  private def incrementCalcIndividualReturnThreadCount(tickerSymbol: TickerSymbol): Unit = {
+    space.asyncChange(makeIdQuery(tickerSymbol), new ChangeSet().increment(calcIndividualPropName, 1))
+    tickerSymbol.calcIndividualReturnThreadCount = tickerSymbol.calcIndividualReturnThreadCount + 1
+  }
+
+  private def incrementCalcMarketReturnThreadCount(tickerSymbol: TickerSymbol): Unit = {
+    space.asyncChange(makeIdQuery(tickerSymbol), new ChangeSet().increment(calcIndividualPropName, 1))
+    tickerSymbol.calcMarketReturnThreadCount = tickerSymbol.calcMarketReturnThreadCount + 1
   }
 
   private def incrementFeedThreadCount(tickerSymbol: TickerSymbol): Unit = {

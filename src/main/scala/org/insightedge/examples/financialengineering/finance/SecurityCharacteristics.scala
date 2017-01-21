@@ -1,6 +1,6 @@
 package org.insightedge.examples.financialengineering.finance
 
-import org.insightedge.examples.financialengineering.model.{RegressorResult, Stock, Trade}
+import org.insightedge.examples.financialengineering.model.{RegressorResult, Stock, Investment}
 import org.insightedge.scala.annotation.SpaceId
 
 import scala.beans.BeanProperty
@@ -40,7 +40,7 @@ import scala.beans.BeanProperty
   */
 class SecurityCharacteristics {
 
-  import org.insightedge.examples.financialengineering.model.TradeHelp._
+  import org.insightedge.examples.financialengineering.model.InvestmentHelp._
 
   /**
     * `R,,,t,,, = (P,,,t,,, - P,,,t-1,,, + d,,,t,,,) / P,,,t-1,,,`
@@ -55,20 +55,20 @@ class SecurityCharacteristics {
     * @param trade subject of this calculation
     * @return a return ;)
     */
-  def monthlyRateOfReturn(trade: Trade): Double = {
+  def monthlyRateOfReturn(trade: Investment): Double = {
     val Pt = trade.sellPrice
     val Ptm1 = trade.buyPrice
     val div = trade.dividendsDuringTerm
     val totalReturn = Pt - Ptm1 + div
-    val monthlyReturn = totalReturn / trade.months // ?
+    val monthlyReturn = totalReturn / trade.years() / 12 // ?
     monthlyReturn
   }
 
   /** @param portfolio [Stock][Trade]s
     * @return a list of monthly market returns, weighted by market capitalization
     */
-  def weightedMonthlyReturns(portfolio: List[(Stock, Trade)]): List[Double] = {
-    def weight(s: Stock, t: Trade): Double = {
+  def weightedMonthlyReturns(portfolio: List[(Stock, Investment)]): List[Double] = {
+    def weight(s: Stock, t: Investment): Double = {
       monthlyRateOfReturn(t) / s.outstandingShares
     }
 
@@ -76,10 +76,10 @@ class SecurityCharacteristics {
   }
 
   /** @return the average return for the given portfolio. Returns
-    *         are weighted by the market capitalization of an [[Trade]]'s [[Stock]].
-    * @param portfolio some [[Stock]]-based [[Trade]]s
+    *         are weighted by the market capitalization of an [[Investment]]'s [[Stock]].
+    * @param portfolio some [[Stock]]-based [[Investment]]s
     */
-  def marketReturn(portfolio: List[(Stock, Trade)]): Double = {
+  def marketReturn(portfolio: List[(Stock, Investment)]): Double = {
     val returns = weightedMonthlyReturns(portfolio)
     (0.0 /: returns) {
       _ + _

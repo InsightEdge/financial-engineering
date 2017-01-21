@@ -12,7 +12,6 @@ import java.time.{LocalDateTime, ZoneId}
 object Settings {
 
 
-
   val timeZone: String = "America/New_York"
   val daysPerYear: Short = 360
   val msPerDay: Long = 24 * 60 * 1000
@@ -26,6 +25,16 @@ object Settings {
   val ingestionFrequencyMilliseconds = 1
   val ingestionAppName = "KafkaToSpaceIngestion"
   val ingestContextFrequencyMilliseconds = 2000
+
+  val calcIndividualThreadsPerSymbol = 1
+  val calcIndividualFrequencyMilliseconds = 1
+  val calcIndividualAppName = "CalcIndividualReturn"
+  val calcIndividualContextFrequencyMilliseconds = 2000
+
+  val calcMarketReturnThreadsPerSymbol = 1
+  val calcMarketReturnFrequencyMilliseconds = 1
+  val calcMarketReturnAppName = "CalcMarketReturnReturn"
+  val calcMarketReturnContextFrequencyMilliseconds = 2000
 
   val feedAppName = "TickDataFromCsvFeed"
   val feedSleepTimeMs = 2000
@@ -46,7 +55,7 @@ object Settings {
   val remoteJiniUrl = s"jini://$spaceLookupLocators/*/$spaceName"
 
   // Spark
-  val sparkMasterUrl = "local[7]"
+  val sparkMasterUrl = "local[*]"
 
   // Kafka
   val kafkaBrokers = "127.0.0.1:9092"

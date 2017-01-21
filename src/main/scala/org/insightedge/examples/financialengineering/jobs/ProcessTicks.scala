@@ -26,9 +26,8 @@ import scala.collection.mutable
 
 /** @author Jason Nerothin
   */
+@deprecated
 object ProcessTicks extends SpaceUsage {
-
-  //  val streamingCtx:StreamingContext = makeStreamingContext(Settings.processorAppName, Settings.tickProcessorFrequencyMilliseconds)
 
   val sc: SparkContext = new SparkContext(makeSparkConf(Settings.processorAppName))
 
@@ -38,21 +37,17 @@ object ProcessTicks extends SpaceUsage {
     */
   private val timeDifferenceToleranceMs = 1000
 
-  def zipEverything(timesTradesReturnsAndTBills: IndexedSeq[(Long, Trade, Double, TBill)],
+  def zipEverything(timesTradesReturnsAndTBills: IndexedSeq[(Long, Investment, Double, TBill)],
                     timesAndMarketReturns: mutable.Map[Long, mutable.LinkedList[Double]]):
   // timesTradesStocksReturnsTBillsAndMarketReturns
-  IndexedSeq[(Long, Trade, AssetReturn, TBill, Double, MarketReturn)] = {
+  IndexedSeq[(Long, Investment, Double, TBill, Double, MarketReturn)] = {
     timesTradesReturnsAndTBills
     null
   }
 
-  def doRegression(timesTradesStocksReturnsTBillsReturnsAndMarketReturns: IndexedSeq[(Long, Trade, AssetReturn, TBill, Double, MarketReturn)]) = {
-
-  }
-
   def main(args: Array[String]) {
 
-    TickerSymbols.provideTickerSymbolForTickProcessor() match {
+    TickerSymbols.provideTickerSymbolForCalcIndividualReturn() match {
 
       case Some(tickerSymbol) =>
 
@@ -74,7 +69,7 @@ object ProcessTicks extends SpaceUsage {
         // NOTE: Ticks reuse Trade as a representation of the value
         // change in a Stock from the time of the Tick to the time of
         // a month previous.
-        val timesTradesAndReturns: IndexedSeq[(Long, Trade, Double)] =
+        val timesTradesAndReturns: IndexedSeq[(Long, Investment, Double)] =
           computeTimesTradesAndReturns(ticks, oneMonthBeforeFirstTrade)
 
         /** This time match is different from the others in that it
@@ -82,12 +77,12 @@ object ProcessTicks extends SpaceUsage {
           *
           * The returned time comes from Trades.
           */
-        val timesTradesReturnsAndTBills: IndexedSeq[(Long, Trade, Double, TBill)] =
+        val timesTradesReturnsAndTBills: IndexedSeq[(Long, Investment, Double, TBill)] =
           zipByTimeWithRetrievedTBills(timesTradesAndReturns, bondDateCutoff)
 
-        val stocksAndTrades: List[(Stock, Trade)] =
+        val stocksAndTrades: List[(Stock, Investment)] =
           timesTradesReturnsAndTBills.map { i => (stock, i._2) }.toList
-        val stocksTradesAndReturns: List[((Stock, Trade), Double)] =
+        val stocksTradesAndReturns: List[((Stock, Investment), Double)] =
           stocksAndTrades zip weightedMonthlyReturns(stocksAndTrades)
 
         // times come from MarketReturns
@@ -96,14 +91,12 @@ object ProcessTicks extends SpaceUsage {
 
         // times come from Trade (which comes from TickData)
         val timesTradesStocksReturnsTBillsReturnsAndMarketReturns:
-          IndexedSeq[(Long, Trade, AssetReturn, TBill, Double, MarketReturn)] =
+          IndexedSeq[(Long, Investment, Double, TBill, Double, MarketReturn)] =
           zipEverything(timesTradesReturnsAndTBills, timesAndMarketReturns)
-
-        val vectors = doRegression(timesTradesStocksReturnsTBillsReturnsAndMarketReturns)
 
         // TODO save result
 
-        TickerSymbols.returnSymbolFromTickProcessor(tickerSymbol)
+        TickerSymbols.returnSymbolFromCalcIndividualReturn(tickerSymbol)
 
       case None => println("All ticker symbols have been allocated enough ProcessTicks Threads.")
 
@@ -119,7 +112,7 @@ object ProcessTicks extends SpaceUsage {
   // Ali's deck - forester - decade+ experience
   // A Mongo replacement Space
 
-  private def computeMarketReturns(stocksTradesAndReturns: List[((Stock, Trade), Double)],
+  private def computeMarketReturns(stocksTradesAndReturns: List[((Stock, Investment), Double)],
                                    marketReturnDateCutoff: Long)
   : mutable.Map[Long, mutable.LinkedList[Double]] = {
 
@@ -131,35 +124,35 @@ object ProcessTicks extends SpaceUsage {
 
     val timestamps = currentReturns.map(_._1).mkString(",")
 
-    val existingStockReturns: List[(Long, Double)] = sc.gridSql[AssetReturn](s"WHERE timestampMs IN ($timestamps)")
-      .map { sr =>
-        (sr.timestampMs, sr.percentageRateOfReturn)
-      }.toLocalIterator.toList
+//    val existingStockReturns: List[(Long, Double)] = sc.gridSql[](s"WHERE timestampMs IN ($timestamps)")
+//      .map { sr =>
+//        (sr.timestampMs, sr.percentageRateOfReturn)
+//      }.toLocalIterator.toList
 
     val timeToReturns = mutable.HashMap[Long, mutable.LinkedList[Double]]()
 
-    for (existingStockReturn <- existingStockReturns) {
-      val timestamp = existingStockReturn._1
-      if (timestamp > marketReturnDateCutoff) {
-        val list = timeToReturns.get(timestamp) match {
-          case Some(x: mutable.LinkedList[Double]) =>
-            x ++ mutable.LinkedList(existingStockReturn._2)
-          case _ =>
-            mutable.LinkedList()
-        }
-        timeToReturns(timestamp) = list.asInstanceOf[mutable.LinkedList[Double]]
-      }
-    }
+//    for (existingStockReturn <- existingStockReturns) {
+//      val timestamp = existingStockReturn._1
+//      if (timestamp > marketReturnDateCutoff) {
+//        val list = timeToReturns.get(timestamp) match {
+//          case Some(x: mutable.LinkedList[Double]) =>
+//            x ++ mutable.LinkedList(existingStockReturn._2)
+//          case _ =>
+//            mutable.LinkedList()
+//        }
+//        timeToReturns(timestamp) = list.asInstanceOf[mutable.LinkedList[Double]]
+//      }
+//    }
 
     timeToReturns
 
   }
 
-  private def zipByTimeWithRetrievedTBills(timesTradesAndReturns: IndexedSeq[(Long, Trade, Double)], bondDateCutoff: Long) = {
+  private def zipByTimeWithRetrievedTBills(timesTradesAndReturns: IndexedSeq[(Long, Investment, Double)], bondDateCutoff: Long) = {
     val tBillItr = sc.gridSql[TBill](s"WHERE timestampMs >= $bondDateCutoff").toLocalIterator
     require(tBillItr.nonEmpty, "No TBills available to use as zero-risk securities.")
     var currTBill = tBillItr.next
-    val timesTradesReturnsAndTBills: IndexedSeq[(Long, Trade, Double, TBill)] = timesTradesAndReturns.map {
+    val timesTradesReturnsAndTBills: IndexedSeq[(Long, Investment, Double, TBill)] = timesTradesAndReturns.map {
       tar =>
         val tradeTime = tar._1
         if (tradeTime < currTBill.timestampMs && tBillItr.hasNext) {
@@ -167,11 +160,11 @@ object ProcessTicks extends SpaceUsage {
           currTBill = tBillItr.next
           (tradeTime, tar._2, tar._3, tempTBill)
         }
-    }.asInstanceOf[IndexedSeq[(Long, Trade, Double, TBill)]]
+    }.asInstanceOf[IndexedSeq[(Long, Investment, Double, TBill)]]
     timesTradesReturnsAndTBills
   }
 
-  def computeTimesTradesAndReturns(ticks: List[TickData], cutoff: Long): IndexedSeq[(Long, Trade, Double)] = {
+  def computeTimesTradesAndReturns(ticks: List[TickData], cutoff: Long): IndexedSeq[(Long, Investment, Double)] = {
     val len = ticks.length
     println(s"Processing $len MarketTicks.")
     val halfway = len / 2
@@ -184,11 +177,11 @@ object ProcessTicks extends SpaceUsage {
         tup =>
           val recent = ticks(tup._2)
           val historic = ticks(tup._1)
-          val trade = Trade(
+          val trade = Investment(
             id = null,
             buyPrice = historic.open,
             sellPrice = recent.close,
-            buyDateMs = historic.timestampMs,
+            startDateMs = historic.timestampMs,
             endDateMs = recent.timestampMs
           )
           (recent.timestampMs, trade, monthlyRateOfReturn(trade))

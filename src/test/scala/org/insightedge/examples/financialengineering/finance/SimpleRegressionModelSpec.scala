@@ -1,6 +1,5 @@
-package org.insightedge.examples.financialengineering
+package org.insightedge.examples.financialengineering.finance
 
-import org.insightedge.examples.financialengineering.finance.SimpleRegressionModel
 import org.scalatest.Matchers._
 import org.scalatest._
 
@@ -19,19 +18,19 @@ class SimpleRegressionModelSpec extends Spec{
 
   object `Simple Regression Model` {
 
-    def `should calculate alpha` {
+    def `should calculate alpha`() {
       val result = SimpleRegressionModel.leastSquares(solidsReductionPercentage zip chemicalOxygenDemand)
       val alpha: Double = result._1
       alpha should equal(3.829633 +- .000001)
     }
 
-    def `should calculate beta` {
+    def `should calculate beta`() {
       val result = SimpleRegressionModel.leastSquares(solidsReductionPercentage zip chemicalOxygenDemand)
       val beta: Double = result._2
       beta should equal(0.903643 +- .000001)
     }
 
-    def `should do something about epsilon` = {
+    def `should do something about epsilon`() = {
       val result = SimpleRegressionModel.leastSquares(solidsReductionPercentage zip chemicalOxygenDemand)
       val epsilon: Double = result._3
       epsilon should equal(0.0d)

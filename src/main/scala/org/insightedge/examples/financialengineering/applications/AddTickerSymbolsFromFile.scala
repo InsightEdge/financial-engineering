@@ -52,7 +52,8 @@ object AddTickerSymbolsFromFile extends SpaceUsage {
         abbr,
         ingestionThreadCount = 0,
         feedThreadCount = 0,
-        tickProcessorThreadCount = 0
+        calcIndividualReturnThreadCount = 0,
+        calcMarketReturnThreadCount = 0
       )
       println(s"Adding TickerSymbol '$abbr' to the System.")
       tryToAddSymbol(symbol)
