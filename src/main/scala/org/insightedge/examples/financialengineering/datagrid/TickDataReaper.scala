@@ -17,7 +17,7 @@ import org.openspaces.events.{EventDriven, EventTemplate}
   * Time: 11:30 PM
   */
 @EventDriven
-@Polling
+@Polling(concurrentConsumers = 3, maxConcurrentConsumers = 6)
 class TickDataReaper {
 
   @Resource

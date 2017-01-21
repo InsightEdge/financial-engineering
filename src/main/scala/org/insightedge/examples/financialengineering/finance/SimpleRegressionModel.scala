@@ -14,7 +14,7 @@ class SimpleRegressionModel {
     * https://en.wikipedia.org/wiki/Ordinary_least_squares#Simple_regression_model
     *
     * @param xsAndYs x-values and y-values
-    * @return alpha, beta and epsilon
+    * @return estimators for alpha, beta, and epsilon
     */
   def leastSquares(xsAndYs: List[(Double, Double)]): (Double, Double, Double) = {
     val z = 0d
@@ -44,6 +44,13 @@ class SimpleRegressionModel {
     (aVal, bVal, epsilon(xsAndYs))
   }
 
+  def leaseSquaresStats(xsAndYs: List[(Double, Double)]): (Double, Double, Double, Double, Double) = {
+    (1D, 1D, 1D, 1D, 1D)
+  }
+
 }
 
-object SimpleRegressionModel extends SimpleRegressionModel
+object SimpleRegressionModel extends SimpleRegressionModel {
+
+
+}
