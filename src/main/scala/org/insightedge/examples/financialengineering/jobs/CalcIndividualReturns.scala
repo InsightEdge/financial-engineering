@@ -19,15 +19,13 @@ import scala.collection.mutable
   *
   * Turns [[TickData]] into [[InvestmentReturn]]s.
   */
-class CalcIndividualReturns extends SpaceUsage {
+class CalcIndividualReturns  {
 
   val streamingCtx: StreamingContext =
     makeStreamingContext(
       Settings.calcIndividualAppName,
       Settings.calcIndividualContextFrequencyMilliseconds
     )
-
-  val space: GigaSpace = makeClusteredProxy()
 
   def main(args: Array[String]): Unit = {
 
@@ -49,7 +47,7 @@ class CalcIndividualReturns extends SpaceUsage {
           val i = n._1.toInvestment(n._2)
           returns ++ List(InvestmentReturn(null, i.endDateMs, i.id, i.CAGR()))
         }
-        space.writeMultiple(returns.toArray)
+        streamingCtx.sparkContext.parallelize(returns).saveToGrid()
 
         TickerSymbols.returnSymbolFromCalcIndividualReturn(tickerSymbol)
 
@@ -57,7 +55,7 @@ class CalcIndividualReturns extends SpaceUsage {
         streamingCtx.awaitTerminationOrTimeout(100)
         streamingCtx.sparkContext.stopInsightEdgeContext()
 
-      case _ => println("There are already enough CalcMarketReturn Threads.")
+      case _ => println("There are already enough CalcIndividualReturn Threads.")
 
     }
 
