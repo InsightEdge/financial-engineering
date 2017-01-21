@@ -14,7 +14,7 @@ import org.insightedge.spark.implicits.all._
   * Date: 1/20/17
   * Time: 12:21 PM
   */
-class CalcMarketReturn {
+class CalcMarketReturns {
 
 
 }

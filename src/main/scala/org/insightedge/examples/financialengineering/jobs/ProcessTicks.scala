@@ -51,7 +51,7 @@ object ProcessTicks extends SpaceUsage {
 
       case Some(tickerSymbol) =>
 
-        val stock: Stock = retrieveStock(tickerSymbol)
+//        val stock: Stock = retrieveStock(tickerSymbol)
 
         // import tick data
         val timeLimit = Settings.ticksPerMonth * 2
@@ -188,14 +188,6 @@ object ProcessTicks extends SpaceUsage {
       }
       .filter(_._1 > cutoff) // for cases where there is insufficient back-data - e.g. t=[0,2 mo)
     // i.e before the 2nd full month of data
-  }
-
-  private def retrieveStock(tickerSymbol: TickerSymbol) = {
-    val sym = tickerSymbol.abbreviation
-    val STOCKS = sc.gridSql[Stock](s"WHERE tickerSymbol = $sym").toLocalIterator.toList
-    require(STOCKS.nonEmpty, s"No Stock found for symbol: $sym")
-    val stock = STOCKS.head
-    stock
   }
 
 }
