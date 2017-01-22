@@ -6,14 +6,10 @@ import com.j_spaces.core.client.SQLQuery
 import org.insightedge.examples.financialengineering.Settings
 import org.insightedge.examples.financialengineering.finance.SimpleRegressionModel
 import org.insightedge.examples.financialengineering.model.{CharacteristicLine, InvestmentReturn, MarketReturn}
-import org.insightedge.scala.annotation.SpaceIndex
 import org.openspaces.core.GigaSpace
 import org.openspaces.events.adapter.SpaceDataEvent
 import org.openspaces.events.{EventDriven, EventTemplate}
-import org.openspaces.events.asyncpolling.AsyncPolling
 import org.openspaces.events.polling.Polling
-
-import scala.beans.BeanProperty
 
 /**
   * Created by IntelliJ IDEA.
@@ -52,20 +48,17 @@ class RegressionProcessor {
 
     val investmentId = investments.keys
     for (iid <- investmentId) {
+      // TODO multi-Thread
 
       val forThisId = investments.getOrElse(iid, Array[InvestmentReturn]())
 
-      val returns =
+      val regressors =
         forThisId.map(
-          ir => (ir.investmentId, ir.percentageRateOfReturn, marketRoi)
+          ir => (ir.percentageRateOfReturn, marketRoi)
         )
 
-      val regressors = returns.map { ir => (ir._2, ir._3) }.toList
-
-      val (a, b, e) =
-        SimpleRegressionModel.leastSquares(regressors)
-      val (aVar, bVar, aConfMag, bConfMag, mVar) =
-        SimpleRegressionModel.leaseSquaresStats(regressors)
+      val (a, aVar, aConfMag, b, bVar, bConfMag, mVar) = SimpleRegressionModel
+          .leastSquares(regressors)
 
       space.write(CharacteristicLine(
         id = null,

@@ -9,48 +9,80 @@ package org.insightedge.examples.financialengineering.finance
   */
 class SimpleRegressionModel {
 
+  private val confidenceLevel = 0.95D
+
   /**
     * This method comes from wikipedia:
     * https://en.wikipedia.org/wiki/Ordinary_least_squares#Simple_regression_model
     *
-    * @param xsAndYs x-values and y-values
-    * @return estimators for alpha, beta, and epsilon
+    * @param xsAndYs list of regressors as (x,y)
+    * @return ( a - estimator of alpha, variance of a, confidence interval magnitude of a,
+    *         b - estimator of beta, variance of a, confidence interval magnitude of b,
+    *         modelVariance )
     */
-  def leastSquares(xsAndYs: List[(Double, Double)]): (Double, Double, Double) = {
+  def leastSquares(xsAndYs: Seq[(Double, Double)]): (Double, Double, Double, Double, Double, Double, Double) = {
     val z = 0d
 
-    def bSumOfXSumOfY(xsAndYs: List[(Double, Double)]): (Double, Double, Double) = {
+    def bAndOtherStuff(xsAndYs: List[(Double, Double)]): (Double, Double, Double, Double, Double, Double, Double) = {
       val n = xsAndYs.length.toDouble
-      val sumOfProducts = xsAndYs.foldLeft(z) { (a, i: (Double, Double)) => a + i._1 * i._2 }
-      val sumOfXs = xsAndYs.foldLeft(z) { (a, i: (Double, Double)) => a + i._1 }
-      val sumOfYs = xsAndYs.foldLeft(z) { (a, i: (Double, Double)) => a + i._2 }
-      val numerator = sumOfProducts - sumOfXs * sumOfYs / n
-      val sumOfXsquared = xsAndYs.foldLeft(z) { (a, i: (Double, Double)) => a + i._1 * i._1 }
-      val demnominator = sumOfXsquared - sumOfXs * sumOfXs / n
-      (numerator / demnominator, sumOfXs, sumOfYs)
+      var sumOfProducts = z
+      var sumOfXs = z
+      var sumOfYs = z
+      var sumOfXSquared = z
+      var sumOfYSquared = z
+      for (xy <- xsAndYs) {
+        val x = xy._1
+        val y = xy._2
+        sumOfXs = sumOfXs + x
+        sumOfYs = sumOfYs + y
+        sumOfProducts = sumOfProducts + x * y
+        sumOfXSquared = sumOfXSquared + x * x
+        sumOfYSquared = sumOfYSquared + y * y
+      }
+
+      val bNum = n * sumOfProducts - sumOfXs * sumOfYs
+      val bDen = n * sumOfXSquared - sumOfXs * sumOfXs
+      val b = bNum / bDen
+
+      val xMean = sumOfXs / n
+      val yMean = sumOfYs / n
+
+      var Syy = z
+      var Sxy = z
+      var Sxx = z
+      for (xy <- xsAndYs) {
+        val x = xy._1
+        val y = xy._2
+        val xDiff = x - xMean
+        val yDiff = y - yMean
+        Sxx = Sxx + xDiff * xDiff
+        Sxy = Sxy + xDiff * yDiff
+        Syy = Syy + yDiff * yDiff
+      }
+      val modelVariance = math.abs((Syy - b * Sxy) / n - 2)
+
+      (b, sumOfXs, sumOfYs, sumOfXSquared, sumOfYSquared, modelVariance, Sxx)
     }
 
     def a(xsAndYs: List[(Double, Double)], sumOfXs: Double, sumOfYs: Double, b: Double): Double = {
       (sumOfYs - b * sumOfXs) / xsAndYs.length
     }
 
-    def epsilon(xsAndYs: List[(Double, Double)]): Double = {
-      0
-    }
+    val n = xsAndYs.length
 
-    val (bVal, sumX, sumY) = bSumOfXSumOfY(xsAndYs)
-    val aVal: Double = a(xsAndYs, sumX, sumY, bVal)
+    val (bValue, sumX, sumY, sumOfXSquared, sumOfYSquared, modelVariance, sxx) = bAndOtherStuff(xsAndYs)
+    val sigmaEstimate = math.sqrt(modelVariance) // a.k.a. "s"
+    val bVariance = modelVariance / sumOfXSquared
+    val tAlpha2 = StudentsT.tVal(n.toShort, confidenceLevel)
+    val bConfidenceInterval = tAlpha2 * sigmaEstimate / math.sqrt(sxx)
 
-    (aVal, bVal, epsilon(xsAndYs))
-  }
+    val aValue = a(xsAndYs, sumX, sumY, bValue)
+    val aVariance = sumOfXSquared * modelVariance / n * sxx
+    val aConfidenceInterval = tAlpha2 * math.sqrt(sumOfXSquared) / math.sqrt(n * sxx)
 
-  def leaseSquaresStats(xsAndYs: List[(Double, Double)]): (Double, Double, Double, Double, Double) = {
-    (1D, 1D, 1D, 1D, 1D)
+    (aValue, aVariance, aConfidenceInterval, bValue, bVariance, bConfidenceInterval, modelVariance)
   }
 
 }
 
-object SimpleRegressionModel extends SimpleRegressionModel {
-
-
-}
+object SimpleRegressionModel extends SimpleRegressionModel
