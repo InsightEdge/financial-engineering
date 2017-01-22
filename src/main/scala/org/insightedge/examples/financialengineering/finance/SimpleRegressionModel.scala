@@ -23,7 +23,7 @@ class SimpleRegressionModel {
   def leastSquares(xsAndYs: Seq[(Double, Double)]): (Double, Double, Double, Double, Double, Double, Double) = {
     val z = 0d
 
-    def bAndOtherStuff(xsAndYs: List[(Double, Double)]): (Double, Double, Double, Double, Double, Double, Double) = {
+    def bAndOtherStuff(xsAndYs: Seq[(Double, Double)]): (Double, Double, Double, Double, Double, Double, Double) = {
       val n = xsAndYs.length.toDouble
       var sumOfProducts = z
       var sumOfXs = z
@@ -64,7 +64,7 @@ class SimpleRegressionModel {
       (b, sumOfXs, sumOfYs, sumOfXSquared, sumOfYSquared, modelVariance, Sxx)
     }
 
-    def a(xsAndYs: List[(Double, Double)], sumOfXs: Double, sumOfYs: Double, b: Double): Double = {
+    def a(xsAndYs: Seq[(Double, Double)], sumOfXs: Double, sumOfYs: Double, b: Double): Double = {
       (sumOfYs - b * sumOfXs) / xsAndYs.length
     }
 

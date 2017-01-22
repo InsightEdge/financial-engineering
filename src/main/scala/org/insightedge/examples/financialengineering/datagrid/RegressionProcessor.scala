@@ -36,7 +36,7 @@ class RegressionProcessor {
   @SpaceDataEvent
   def listener(marketReturn: MarketReturn): MarketReturn = {
 
-    val marketRoi = marketReturn.percentageRateOfReturn
+    val marketReturnPct = marketReturn.percentageRateOfReturn
     val time1: Long = marketReturn.timestampMs
     val time0 = time1 - Settings.msPerMonth
 
@@ -46,15 +46,15 @@ class RegressionProcessor {
         s"WHERE timestampMs <= $time1 AND timestampMs > $time0")
     ).groupBy(inv => inv.investmentId)
 
-    val investmentId = investments.keys
-    for (iid <- investmentId) {
+    val investmentIds = investments.keys
+    for (invId <- investmentIds) {
       // TODO multi-Thread
 
-      val forThisId = investments.getOrElse(iid, Array[InvestmentReturn]())
+      val forThisId = investments.getOrElse(invId, Array[InvestmentReturn]())
 
       val regressors =
         forThisId.map(
-          ir => (ir.percentageRateOfReturn, marketRoi)
+          ir => (ir.percentageRateOfReturn, marketReturnPct)
         )
 
       val (a, aVar, aConfMag, b, bVar, bConfMag, mVar) = SimpleRegressionModel
@@ -63,13 +63,13 @@ class RegressionProcessor {
       space.write(CharacteristicLine(
         id = null,
         timestampMs = time1,
-        investmentId = iid,
+        investmentId = invId,
         a = a,
         aVariance = aVar,
-        alphaConfidenceIntervalMagnitude = aConfMag,
+        aConfidenceIntervalMagnitude = aConfMag,
         b = b,
         bVariance = bVar,
-        betaConfidenceIntervalMagnitude = bConfMag,
+        bConfidenceIntervalMagnitude = bConfMag,
         modelErrorVariance = mVar
       ))
     }

@@ -28,15 +28,15 @@ case class CharacteristicLine(
                                @BeanProperty
                                var aVariance: Double,
                                @BeanProperty
-                               var alphaConfidenceIntervalMagnitude: Double,
+                               var aConfidenceIntervalMagnitude: Double,
                                @BeanProperty
                                var b: Double,
                                @BeanProperty
                                var bVariance: Double,
                                @BeanProperty
-                               var betaConfidenceIntervalMagnitude: Double,
+                               var bConfidenceIntervalMagnitude: Double,
                                @BeanProperty
                                var modelErrorVariance: Double
                              ) {
-  def this() = this(null, -1L, -1D, -1D, -1D, -1D, -1D, -1D, -1D, -1D)
+  def this() = this(null, -1L, null, -1D, -1D, -1D, -1D, -1D, -1D, -1D)
 }
