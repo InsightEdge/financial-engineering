@@ -5,6 +5,7 @@ import java.nio.file.{Files, Paths}
 import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 import org.insightedge.examples.financialengineering
 import org.insightedge.examples.financialengineering.kafka.MarketTickDecoder
+import org.insightedge.examples.financialengineering.kafka.MarketTickSerializer
 import org.insightedge.examples.financialengineering.{Settings, SpaceUsage}
 import org.insightedge.examples.financialengineering.model.{MarketTick, TickerSymbol, TickerSymbols}
 
@@ -37,7 +38,9 @@ object Feed extends SpaceUsage {
     */
   def main(args: Array[String]): Unit = {
 
-    val tickerSymbol = TickerSymbols.provideTickerSymbolForFeed()
+//    val tickerSymbol = TickerSymbols.provideTickerSymbolForFeed()
+
+    val tickerSymbol:Option[TickerSymbol] = Some(new TickerSymbol("UTX", -1, -1, -1, -1))
 
     tickerSymbol match {
       case Some(symbol) =>
@@ -62,8 +65,6 @@ object Feed extends SpaceUsage {
       case None =>
         println("No more ticker symbols need to be processed (each has its own Thread). Exiting.")
     }
-
-
 
   }
 

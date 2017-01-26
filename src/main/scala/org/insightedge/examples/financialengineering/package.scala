@@ -58,7 +58,7 @@ package object financialengineering{
     props.put(keySerializerConfig,
       "org.apache.kafka.common.serialization.StringSerializer")
     props.put(valueSerializerConfig,
-      "org.insightedge.examples.financialengineering.model.MarketTickSerializer")
+      "org.insightedge.examples.financialengineering.kafka.MarketTickSerializer")
     props
   }
 
