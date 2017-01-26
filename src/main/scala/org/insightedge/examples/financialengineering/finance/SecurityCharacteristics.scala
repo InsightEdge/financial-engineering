@@ -86,10 +86,6 @@ class SecurityCharacteristics {
     } / returns.length
   }
 
-  def simpleRegressionModel(): RegressorResult = {
-    null
-  }
-
 }
 
 object SecurityCharacteristics extends SecurityCharacteristics
