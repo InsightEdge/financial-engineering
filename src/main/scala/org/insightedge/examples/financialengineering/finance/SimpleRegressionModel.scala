@@ -44,8 +44,8 @@ class SimpleRegressionModel {
       val bDen = n * sumOfXSquared - sumOfXs * sumOfXs
       val b = bNum / bDen
 
-      val xMean = sumOfXs / n
-      val yMean = sumOfYs / n
+      val xMean = math.abs(sumOfXs / n)
+      val yMean = math.abs(sumOfYs / n)
 
       var Syy = z
       var Sxy = z
@@ -59,7 +59,7 @@ class SimpleRegressionModel {
         Sxy = Sxy + xDiff * yDiff
         Syy = Syy + yDiff * yDiff
       }
-      val modelVariance = math.abs((Syy - b * Sxy) / n - 2)
+      val modelVariance = math.abs((Syy - b * Sxy) / (n - 2))
 
       (b, sumOfXs, sumOfYs, sumOfXSquared, sumOfYSquared, modelVariance, Sxx)
     }
@@ -71,14 +71,16 @@ class SimpleRegressionModel {
     val n = xsAndYs.length
 
     val (bValue, sumX, sumY, sumOfXSquared, sumOfYSquared, modelVariance, sxx) = bAndOtherStuff(xsAndYs)
-    val sigmaEstimate = math.sqrt(modelVariance) // a.k.a. "s"
-    val bVariance = modelVariance / sumOfXSquared
-    val tAlpha2 = StudentsT.tVal(n.toShort, confidenceLevel)
-    val bConfidenceInterval = tAlpha2 * sigmaEstimate / math.sqrt(sxx)
+    val sigma = math.sqrt(modelVariance)
+    val bVariance = modelVariance / sxx
+    val tAlpha2 = StudentsT.tVal(n - 3, confidenceLevel)
+    val bConfidenceInterval = (tAlpha2 * sigma) / math.sqrt(sxx)
 
     val aValue = a(xsAndYs, sumX, sumY, bValue)
-    val aVariance = sumOfXSquared * modelVariance / n * sxx
-    val aConfidenceInterval = tAlpha2 * math.sqrt(sumOfXSquared) / math.sqrt(n * sxx)
+    val aVariance = (sumOfXSquared * modelVariance) / (n * sxx)
+    val aConfidenceInterval = tAlpha2 * sigma * math.sqrt(sumOfXSquared) / math.sqrt(n * sxx)
+
+    val a0, a1 = (aValue - aConfidenceInterval, aValue + aConfidenceInterval)
 
     (aValue, aVariance, aConfidenceInterval, bValue, bVariance, bConfidenceInterval, modelVariance)
   }

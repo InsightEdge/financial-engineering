@@ -1,9 +1,6 @@
 package org.insightedge.examples.financialengineering.finance
 
-import org.insightedge.examples.financialengineering.model.{RegressorResult, Stock, Investment}
-import org.insightedge.scala.annotation.SpaceId
-
-import scala.beans.BeanProperty
+import org.insightedge.examples.financialengineering.model.{Stock, Investment}
 
 /**
   * User: jason
