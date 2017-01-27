@@ -32,8 +32,8 @@ object Ingest extends SpaceUsage {
 
   def main(args: Array[String]): Unit = {
 
-    def createTickData(t:MarketTick) : TickData = {
-      new TickData(id = null,
+    def createTickData(t: MarketTick): TickData = {
+      TickData(id = null,
         symbol = t.id,
         timestampMs = t.timestamp,
         close = t.close,
@@ -45,9 +45,9 @@ object Ingest extends SpaceUsage {
       )
     }
 
-    val tickerSymbol: Option[TickerSymbol] = Some( new TickerSymbol("UTX", -1, -1, -1, -1) )
+    val tickerSymbol: Option[TickerSymbol] = Some(TickerSymbol("UTX", -1, -1, -1, -1))
 
-    val tickerSymbolAbbreviation = tickerSymbol.get.abbreviation;
+    val tickerSymbolAbbreviation = tickerSymbol.get.abbreviation
 
     println(s"Processing Kafka Topic for symbol [$tickerSymbolAbbreviation]")
 
@@ -68,7 +68,7 @@ object Ingest extends SpaceUsage {
 
         marketTicks.print()
 
-        val tickDataStream: DStream[TickData] = marketTicks.map[TickData]( createTickData )
+        val tickDataStream: DStream[TickData] = marketTicks.map[TickData](createTickData)
 
         tickDataStream.print()
 
@@ -85,43 +85,6 @@ object Ingest extends SpaceUsage {
     streamingCtx.start()
     streamingCtx.awaitTerminationOrTimeout(120 * 1000) // 2 minutes
     streamingCtx.sparkContext.stopInsightEdgeContext()
-
-//    TickerSymbols.provideTickerSymbolForIngestion() match {
-//
-//      case Some(tickerSymbol) =>
-//
-//        val ticker: DStream[(Nothing, Nothing)] = KafkaUtils.createDirectStream(
-//          streamingCtx,
-//          financialengineering.kafkaConsumerProperties(),
-//          Set(tickerSymbol.abbreviation)
-//        )
-//
-//        val tickData: DStream[TickData] = ticker.map[TickData] { packet =>
-//          val tick = packet._2.asInstanceOf[MarketTick]
-//          val td = TickData(id=null,
-//            symbol=tickerSymbol.abbreviation,
-//            timestampMs = tick.timestamp,
-//            close = tick.close,
-//            volume = tick.volume,
-//            earnings = tick.earnings,
-//            dividends = tick.dividends,
-//            open = tick.open
-//          )
-////          println(s"Ingested tick data: $td")
-//          td
-//        }
-//        tickData.foreachRDD(println(_))
-//        tickData.saveToGrid()
-
-//        val countDStream:DStream[Long] = tickData.count()
-//        println("XXXXXXXXX: Number of tick data processed: ")
-//        countDStream.
-
-
-//      case None =>
-//        println("There are already enough Ingest Threads")
-//
-//    }
 
   }
 

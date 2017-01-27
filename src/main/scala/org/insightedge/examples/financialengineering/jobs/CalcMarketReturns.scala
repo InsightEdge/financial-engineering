@@ -51,14 +51,12 @@ class CalcMarketReturns extends SpaceUsage {
       val n = activeSymbolCount
       // TODO these would be more efficient in a while loop
       val meanReturn = rets.foldLeft(zero)((a, i: InvestmentReturn) => a + i.getPercentageRateOfReturn) / activeSymbolCount
-      val sumOfSquares = rets.foldLeft(zero)((acc, i: InvestmentReturn) => i.getPercentageRateOfReturn * i.getPercentageRateOfReturn)
       val sumOfSquaredDifferences = rets.foldLeft(zero)((acc, i: InvestmentReturn) => {
         val diff = meanReturn - i.percentageRateOfReturn
         diff * diff
       })
       val stdDev = math.sqrt(sumOfSquaredDifferences / (n - 1))
       val sampleVariance = stdDev * stdDev
-      val investmentId = rets.iterator.next().investmentId
       rets.foreach(markProcessed)
       space.write(MarketReturn(null, ts, meanReturn, sampleVariance))
     }
