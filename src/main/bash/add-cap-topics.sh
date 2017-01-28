@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 /Users/jason/bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --create --zookeeper localhost:2181 --if-not-exists --replication-factor 1 --partitions 1 --topic AA
 /Users/jason/bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --create --zookeeper localhost:2181 --if-not-exists --replication-factor 1 --partitions 1 --topic AAPL
 /Users/jason/bin/kafka_2.11-0.10.1.0/bin/kafka-topics.sh --create --zookeeper localhost:2181 --if-not-exists --replication-factor 1 --partitions 1 --topic AIG

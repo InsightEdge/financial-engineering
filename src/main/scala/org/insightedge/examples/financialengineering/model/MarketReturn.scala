@@ -16,7 +16,6 @@ case class MarketReturn(
                          @SpaceId(autoGenerate = true)
                          @BeanProperty
                          var id: String,
-                         @SpaceIndex
                          @BeanProperty
                          var timestampMs: Long,
                          @BeanProperty
@@ -24,9 +23,9 @@ case class MarketReturn(
                          @BeanProperty
                          var variance: Double,
                          @BeanProperty
-                         var processed: Boolean = false
+                         var processed: Boolean
                        ) {
-  def this() = this(null, -1, -1, -1, false)
+  def this() = this(null, timestampMs = -1, percentageRateOfReturn = -1, variance = -1, processed = false)
 }
 
 /**

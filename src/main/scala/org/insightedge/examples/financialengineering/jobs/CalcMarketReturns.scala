@@ -20,7 +20,7 @@ import org.insightedge.spark.implicits.all._
   * For simplification, we assume that all [[org.insightedge.examples.financialengineering.model.Stock]]
   * prices are present for every tick. If they are not, we log a message and skip.
   */
-class CalcMarketReturns extends SpaceUsage {
+object CalcMarketReturns extends SpaceUsage {
 
   private val streamingCtx: StreamingContext =
     makeStreamingContext(
@@ -58,7 +58,7 @@ class CalcMarketReturns extends SpaceUsage {
       val stdDev = math.sqrt(sumOfSquaredDifferences / (n - 1))
       val sampleVariance = stdDev * stdDev
       rets.foreach(markProcessed)
-      space.write(MarketReturn(null, ts, meanReturn, sampleVariance))
+      space.write(MarketReturn(id = null, timestampMs = ts, percentageRateOfReturn = meanReturn, variance = sampleVariance, processed = true))
     }
 
   }

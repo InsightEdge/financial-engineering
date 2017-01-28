@@ -38,9 +38,8 @@ object Feed extends SpaceUsage {
     */
   def main(args: Array[String]): Unit = {
 
-//    val tickerSymbol = TickerSymbols.provideTickerSymbolForFeed()
-
-    val tickerSymbol:Option[TickerSymbol] = Some(new TickerSymbol("UTX", -1, -1, -1, -1))
+    val tickerSymbol = TickerSymbols.provideTickerSymbolForFeed()
+    //    val tickerSymbol:Option[TickerSymbol] = Some(TickerSymbol("UTX", -1, -1, -1, -1))
 
     tickerSymbol match {
       case Some(symbol) =>

@@ -22,7 +22,7 @@ import scala.collection.mutable
   *
   * Turns [[TickData]] into [[InvestmentReturn]]s.
   */
-class CalcIndividualReturns extends SpaceUsage {
+object CalcIndividualReturns extends SpaceUsage {
 
   private val streamingCtx: StreamingContext =
     makeStreamingContext(

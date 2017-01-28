@@ -30,7 +30,7 @@ class RegressionProcessor {
 
   @EventTemplate
   def template(): SQLQuery[MarketReturn] = {
-    new SQLQuery[MarketReturn](MarketReturn.getClass.getName, "where processed = false")
+    new SQLQuery[MarketReturn](classOf[MarketReturn], "processed = false")
   }
 
   @SpaceDataEvent
