@@ -13,13 +13,32 @@ val coreName = "financial-engineering"
 lazy val commonSettings = Seq(
   organization := s"$orgPrefix.$coreName",
   version := "1.0.0",
-  scalaVersion := "2.10.6"
+  scalaVersion := "2.10.6",
+  test in assembly := {}
 )
 
-lazy val core = project.settings(commonSettings)
-lazy val demoSetup = project.dependsOn(core).settings(commonSettings)
-lazy val processingUnit = project.dependsOn(core).settings(commonSettings)
-lazy val sparkJobs = project.dependsOn(core, demoSetup).settings(commonSettings)
+lazy val core = project.
+  settings(commonSettings: _*).
+  settings(
+    assemblyJarName := "core.jar"
+  )
+lazy val demoSetup = project.dependsOn(core).
+  settings(commonSettings: _*).
+  settings(
+    assemblyJarName := "setup.jar"
+  )
+lazy val processingUnit = project.
+  dependsOn(core).
+  settings(commonSettings).
+  settings(
+    assemblyJarName := "demoPU.jar"
+  )
+lazy val sparkJobs = project.
+  dependsOn(core, demoSetup).
+  settings(commonSettings).
+  settings(
+    assemblyJarName := "sparkjobs.jar"
+  )
 lazy val web = project.settings(commonSettings)
 
 lazy val root = (project in file(".")).
