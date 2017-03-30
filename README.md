@@ -6,33 +6,35 @@ This repository contains working code for an [InsightEdge](http://insightedge.io
 
 ![Demo Architecture](docs/images/demo-flow.png)
 
+####Requirements
 
-
-####Requirements    ***XXX*** link TOC
-* Java 1.8
-* Scala 2.10
-* Kafka 2.10-0.8.2.2
-* InsightEdge 1.0.0
-* Either Maven 3.1 OR SBT 0.13.9+
-* XAP >= 12.0
+* Java 1.8 (OSX 1.8.0_60-b27 used)
+* Kafka 2.11-0.10.2.0
+* SBT 0.13.13
+* XAP 12.0.1 (premium build 16611 used)
+* InsightEdge 1.0.0 (community used)
 * Development license (optional)
 
-####Demo Recipe
+####Demo Steps
 
-1. Install InsightEdge
-2. Install Kafka
-3. Install Data Grid
+1. Install Data Grid
+2. Install InsightEdge
+3. Install, Start Kafka
 4. Build
-5. Setup Kafka Data
-6. Start Kafka Feed
-7. Start Data Grid
-8. Deploy Processing Unit
-9. Start InsightEdge
-10. Submit Spark Jobs
-11. Deploy Space
-12. Demo setup
-13. Run demo
-14. View Results
+5. Start Data Grid
+6. Deploy Processing Unit
+7. Start InsightEdge
+8. Setup Demo
+9. Start Kafka Feed
+10. Run demo
+11. Submit Spark Jobs
+12. View Results
+
+#####Install Data Grid
+
+* Download XAP from [this link](???)
+* unzip. The location of the unzipped directory will be referred to as `XAP_HOME` in this document.
+* (optional) Copy `xap-license.txt` into `XAP_HOME`.
 
 #####Install InsightEdge
 
@@ -40,25 +42,20 @@ This repository contains working code for an [InsightEdge](http://insightedge.io
 * Unzip. In this document, we will refer to the unzipped directory as `IE_HOME`.
 * (optional) Copy `ie-license.txt` into `IE_HOME`. 
 
-#####Install Kafka
+#####Install, Start Kafka
 
 Follow [these quickstart instructions](http://kafka.apache.org/quickstart). In this document, we will refer to the unzipped directory as `KAFKA_HOME`. 
 
-Instead of - or in addition to - creating a topic named `test`, we will create a topic for each stock in the dataset, using its NYSE ticker symbol for the topic name.
-
-The list of symbols is in [this file](src/main/resources/NYSE-ticker-symbols.txt), which can be read by [this script](src/main/bash/add-topics.sh) to create the topics.
-
-#####Install Data Grid
-
-* Download XAP from [this link](???)
-* unzip. The location of the unzipped directory will be referred to as `XAP_HOME` in this document.
+Steps 1-2 are sufficient. Steps 3-5 are useful for verifying that the queue is operational...
 
 #####Build
 
-The commands at the end of this section creates a jar file containing each of the following items.
+```bash
+git clone https://github.com/InsightEdge/financial-engineering
+cd financial-engineering
+sbt package
+```
 
-They produce the following:
-   
 ######Applications
 
 * **Feed**
@@ -100,13 +97,9 @@ sbin\insightedge-maven.cmd
 This project has SBT and Maven build files. They produce the same output.
 
 ```bash
-# Maven
-mvn clean test package
 
 # SBT
 sbt clean test assembly
-
-TODO: fix the damn build
 
 cp target/financial-engineering.jar /tmp # so that the rest of the commands in this document work without modification...
 ```

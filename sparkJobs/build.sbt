@@ -2,7 +2,6 @@
 val insightEdgeVersion = "1.0.0"
 val xapVersion = "12.0.1"
 val springVersion = "4.1.1.RELEASE"
-//scalaVersion := "2.10.6"
 resolvers += Resolver.mavenLocal
 resolvers += "Openspaces Maven Repository" at "http://maven-repository.openspaces.org"
 
