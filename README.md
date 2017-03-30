@@ -12,7 +12,7 @@ This repository contains working code for an [InsightEdge](http://insightedge.io
 * Java 1.8
 * Scala 2.10
 * Kafka 2.10-0.8.2.2
-* InsightEdge 1.1.0-SNAPSHOT
+* InsightEdge 1.0.0
 * Either Maven 3.1 OR SBT 0.13.9+
 * XAP >= 12.0
 * Development license (optional)
@@ -106,10 +106,9 @@ mvn clean test package
 # SBT
 sbt clean test assembly
 
+TODO: fix the damn build
 
-TODO: fix the damn build instead
 cp target/financial-engineering.jar /tmp # so that the rest of the commands in this document work without modification...
-jar -tf /tmp/financial-engineering.jar | grep META | grep -v maven| grep "SF\|RSA\|DSA" | xargs jar -d target/financial-engineering.jar
 ```
 
 #####Setup Kafka Data
@@ -143,7 +142,7 @@ To tell the system which symbols to 'follow', we write those ticker symbols to t
 
 This section describes how to set up such data on your system.
 
-* Create a symbol file - or edit [this one](src/main/resources/cap-symbols.txt)
+* Create a symbol file - or edit [this one](setup/src/main/resources/cap-symbols.txt)
 * Change [Settings.scala](src/main/scala/org/insightedge/examples/financialengineering/Settings.scala), in particular, you might want to change:
 [tickerSymbolsFilename](src/main/scala/org/insightedge/examples/financialengineering/Settings.scala#L48) - a file containing ticker symbols of interest (will be added to the system if not already present)
 [tickerSymbolLimit](src/main/scala/org/insightedge/examples/financialengineering/Settings.scala#L47) - read only the first number of lines form the symbol file (track only this many Stock symbols)
