@@ -37,28 +37,24 @@ object CalcMarketReturns extends SpaceUsage with SparkUsage{
 
     val returns = sc.gridSql[InvestmentReturn]("WHERE processed = false").collect()
 
-    val allReturns: Map[Long, Array[InvestmentReturn]] =
+    val investmentReturns: Map[Long, Array[InvestmentReturn]] =
       returns.groupBy(_.timestampMs).filter {
         _._2.length == activeSymbolCount
       }
 
-    val mid: PartialFunction[InvestmentReturn, String] = {
-      case x => x.investmentId
-    }
-
-    val timestamps = allReturns.keySet
+    val timestamps = investmentReturns.keySet
     for (ts <- timestamps) {
-      val rets = allReturns.getOrElse(ts, Array[InvestmentReturn]())
+      val individualReturns = investmentReturns.getOrElse(ts, Array[InvestmentReturn]())
       val n = activeSymbolCount
       // TODO these would be more efficient in a while loop
-      val meanReturn = rets.foldLeft(zero)((a, i: InvestmentReturn) => a + i.getPercentageRateOfReturn) / activeSymbolCount
-      val sumOfSquaredDifferences = rets.foldLeft(zero)((acc, i: InvestmentReturn) => {
+      val meanReturn = individualReturns.foldLeft(zero)((a, i: InvestmentReturn) => a + i.getPercentageRateOfReturn) / activeSymbolCount
+      val sumOfSquaredDifferences = individualReturns.foldLeft(zero)((acc, i: InvestmentReturn) => {
         val diff = meanReturn - i.percentageRateOfReturn
         diff * diff
       })
       val stdDev = math.sqrt(sumOfSquaredDifferences / (n - 1))
       val sampleVariance = stdDev * stdDev
-      rets.foreach(markProcessed)
+      individualReturns.foreach(markProcessed)
       space.write(MarketReturn(id = null, timestampMs = ts, percentageRateOfReturn = meanReturn, variance = sampleVariance, processed = true))
     }
 

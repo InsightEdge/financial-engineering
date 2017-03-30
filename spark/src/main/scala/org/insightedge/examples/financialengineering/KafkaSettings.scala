@@ -13,7 +13,6 @@ object KafkaSettings {
   private val bootstrapServersConfig = "bootstrap.servers"
   private val bootstrapServersValue = kafkaBrokers
   private val brokers = kafkaBrokers
-
   private val keySerializerConfig = "key.serializer"
   private val valueSerializerConfig = "value.serializer"
   private val serializerClassConfig = "serializer.class"
@@ -25,7 +24,7 @@ object KafkaSettings {
     props.put(keySerializerConfig,
       "org.apache.kafka.common.serialization.StringSerializer")
     props.put(valueSerializerConfig,
-      "org.insightedge.examples.financialengineering.kafka.MarketTickSerializer")
+      classOf[org.insightedge.examples.financialengineering.kafka.MarketTickSerializer].getName)
     props
   }
 
