@@ -5,9 +5,8 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.insightedge.examples.financialengineering.kafka.MarketTickDecoder
 import org.insightedge.examples.financialengineering.model._
-import org.insightedge.examples.financialengineering.{SpaceUsage, SparkUsage}
+import org.insightedge.examples.financialengineering.{KafkaSettings, SparkUsage}
 import org.insightedge.spark.implicits.all._
-import org.openspaces.core.GigaSpace
 import org.insightedge.examples.financialengineering.SparkSettings._
 import org.insightedge.examples.financialengineering.repos.TickerSymbols
 
@@ -17,12 +16,12 @@ import org.insightedge.examples.financialengineering.repos.TickerSymbols
   * Time: 1:28 PM
   * Reads from Kafka, Writes to Data Grid.
   *
-  * Each Injest job tracks one TickerSymbol.
+  * Each Ingest job tracks one TickerSymbol.
   * Each tickerSymbol stored in the Data Grid has a dedicated Kafka topic.
   * If a tickerSymbol does not have a pre-existing Kafka topic, creation of the KafkaProducer
   * will cause one to be created (if the Kafka server config is setup to support this).
   */
-object Ingest extends SpaceUsage with SparkUsage{
+object Ingest extends SparkUsage{
 
   import org.apache.spark.streaming.kafka._
 
@@ -30,7 +29,6 @@ object Ingest extends SpaceUsage with SparkUsage{
   val valueDecoder: Decoder[MarketTick] = new MarketTickDecoder
 
   val streamingCtx: StreamingContext = makeStreamingContext(ingestionAppName, ingestContextFrequencyMilliseconds)
-  val space: GigaSpace = makeClusteredProxy()
 
   def main(args: Array[String]): Unit = {
 
@@ -47,7 +45,9 @@ object Ingest extends SpaceUsage with SparkUsage{
       )
     }
 
-    val tickerSymbol: Option[TickerSymbol] = Some(TickerSymbol("UTX", -1, -1, -1, -1))
+    val tickerSymbol: Option[TickerSymbol]
+        =  Some(TickerSymbol(KafkaSettings.testSymbol, -1, -1, -1, -1))
+//      = TickerSymbols.provideTickerSymbolForIngestion()
 
     val tickerSymbolAbbreviation = tickerSymbol.get.abbreviation
 
@@ -58,13 +58,10 @@ object Ingest extends SpaceUsage with SparkUsage{
       case Some(symbol) =>
 
         val topics = Set(tickerSymbolAbbreviation)
-        val kafkaParams = Map[String, String](
-          "metadata.broker.list" -> "localhost:9092",
-          "auto.offset.reset" -> "smallest"
-        )
+
         val marketTicks: DStream[MarketTick] = KafkaUtils.createDirectStream[String, MarketTick, StringDecoder, MarketTickDecoder](
           streamingCtx,
-          kafkaParams,
+          KafkaSettings.kafkaParams,
           topics
         ).map(_._2.asInstanceOf[MarketTick])
 

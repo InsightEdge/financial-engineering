@@ -10,6 +10,8 @@ object KafkaSettings {
 
   val kafkaBrokers = "127.0.0.1:9092"
 
+  val testSymbol = "UTX"
+
   private val bootstrapServersConfig = "bootstrap.servers"
   private val bootstrapServersValue = kafkaBrokers
   private val brokers = kafkaBrokers
@@ -18,9 +20,14 @@ object KafkaSettings {
   private val serializerClassConfig = "serializer.class"
   private val brokerListConfig = "metadata.broker.list"
 
+  val kafkaParams: Map[String, String] = Map[String, String](
+    KafkaSettings.brokerListConfig -> KafkaSettings.kafkaBrokers,
+    "auto.offset.reset" -> "smallest"
+  )
+
   def kafkaProducerProperties(): java.util.Map[String, Object] = {
-    val props = new java.util.HashMap[String,Object]()
-    props.put(bootstrapServersConfig,bootstrapServersValue)
+    val props = new java.util.HashMap[String, Object]()
+    props.put(bootstrapServersConfig, bootstrapServersValue)
     props.put(keySerializerConfig,
       "org.apache.kafka.common.serialization.StringSerializer")
     props.put(valueSerializerConfig,
@@ -29,7 +36,7 @@ object KafkaSettings {
   }
 
   def kafkaConsumerProperties(): Map[String, String] = {
-    Map[String,String](
+    Map[String, String](
       brokerListConfig -> s"$brokers",
       bootstrapServersConfig -> bootstrapServersValue,
       "request.required.acks" -> "1",
