@@ -25,7 +25,7 @@ class TickDataReaper {
 
   @EventTemplate
   def template(): SQLQuery[TickData] = {
-    new SQLQuery[TickData](TickData.getClass.getName, "WHERE processed = true")
+    new SQLQuery[TickData](classOf[TickData], "processed = true")
   }
 
   @SpaceDataEvent
