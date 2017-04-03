@@ -30,9 +30,10 @@ object CoreSettings {
   val calcMarketReturnThreadsPerSymbol = 1
 
   val spaceName = "fin-eng-space"
-  val spaceLookupGroups = "xap-12.1.0"
+  val spaceLookupGroups = "xap-12.0.1"
   // private val spaceLookupLocators = "localhost:7102"
-  val spaceLookupLocators = "127.0.0.1:7102"
+  val spaceLookupLocators = "localhost"
+//  val spaceLookupLocators = "macattack"
   val remoteJiniUrl = s"jini://$spaceLookupLocators/*/$spaceName"
 
 }
