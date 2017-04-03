@@ -39,7 +39,11 @@ object AddTickerSymbolsFromFile extends SpaceUsage {
 
   def main(args: Array[String]): Unit = {
 
-    val reader = scala.io.Source.fromFile(AppSettings.tickerSymbolsFilename).bufferedReader()
+    var filename = AppSettings.tickerSymbolsFilename
+    if( args.length > 0 )
+      filename = args(0)
+
+    val reader = scala.io.Source.fromFile(filename).bufferedReader()
     var lineCount = 0
     var line = ""
     val limit = AppSettings.tickerSymbolLimit
