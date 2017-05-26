@@ -4,6 +4,7 @@ package org.insightedge.examples.financialengineering.model
 import org.scalatest.Matchers._
 import org.insightedge.examples.financialengineering.CoreSettings
 import org.scalatest.Spec
+import java.util.concurrent.TimeUnit
 
 /**
   * Created by IntelliJ IDEA.
@@ -40,7 +41,7 @@ class InvestmentHelpSpec extends Spec {
       }
 
       def `should be calculated as a java.time.Duration`(): Unit = {
-        testInvestment.duration().getSeconds should equal(60 * 24)
+        testInvestment.duration().getSeconds should equal(TimeUnit.DAYS.toSeconds(1))
       }
     }
 

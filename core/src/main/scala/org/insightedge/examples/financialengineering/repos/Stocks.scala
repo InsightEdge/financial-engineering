@@ -10,16 +10,13 @@ import org.insightedge.spark.context.InsightEdgeSparkContext
   * Time: 8:29 PM
   * A repository for [[org.insightedge.examples.financialengineering.model.Stock]]s
   */
-class Stocks
 
-object Stocks extends Stocks{
+object Stocks {
 
   def retrieveStock(tickerSymbol: TickerSymbol)(implicit sparkContext: InsightEdgeSparkContext): Stock = {
     val sym = tickerSymbol.abbreviation
-    val STOCKS = sparkContext.gridSql[Stock](s"WHERE tickerSymbol = $sym").toLocalIterator.toList
+    val STOCKS = sparkContext.gridSql[Stock]("tickerSymbol = ?", sym).toLocalIterator.toList
     require(STOCKS.nonEmpty, s"No Stock found for symbol: $sym")
-    val stock = STOCKS.head
-    stock
+    STOCKS.head
   }
-
 }

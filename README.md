@@ -4,30 +4,28 @@
 
 This repository contains working code for an [InsightEdge](http://insightedge.io) application that uses NYSE market data to continuously calculate the [Security Characteristic Line](https://en.wikipedia.org/wiki/Security_characteristic_line) for 41 stocks.
 
-![Demo Architecture](docs/images/demo-flow.png)
+![Demo Architecture](doc/images/demo-flow.png)
 
 ####Requirements
 
 * Java 1.8 (OSX 1.8.0_60-b27 used)
 * Kafka 2.11-0.10.2.0
 * SBT 0.13.13
-* XAP 12.0.1 (premium build 16611 used)
-* InsightEdge 1.0.0 (community used)
-* Development license (optional)
+* InsightEdge 1.0.0 with XAP 12.0.0 (premium used)
+* Development license
 
 ####Demo Steps
 
 1. Initial setup
-2. Install, Start Data Grid
-3. Install, Start Kafka 
-4. Install, Start InsightEdge
-5. Build, Deploy Processing Unit
+2. Install, Start Kafka 
+3. Install, Start InsightEdge
+4. Build, Deploy Processing Unit
 
-6. Run Demo Setup Apps
+5. Run Demo Setup Apps
 
-7. Start Kafka Feed
-8. Submit Spark Jobs
-9. View Results
+6. Start Kafka Feed
+7. Submit Spark Jobs
+8. View Results
 
 #####Initial Setup
 
@@ -41,23 +39,6 @@ $ mkdir -p ${WORKING_DIRECTORY}
 $ cp /path/to/xap-license.txt ${WORKING_DIRECTORY}
 ```  
 
-#####Install, Start Data Grid
-
-* Download XAP from [this link](???)
-* Copy `xap-license.txt` into `XAP_HOME`.
-
-```bash
-# Download XAP...
-$ cd ${WORKING_DIRECTORY}
-$ unzip ~/Downloads/gigaspaces-xap-premium-12.0.1-ga-b16611.zip
-$ export XAP_HOME="${WORKING_DIRECTORY}/gigaspaces-xap-premium-12.0.1-ga-b16611"
-$ cd ${XAP_HOME}
-$ mv ../xap-license.txt .
-$ export XAP_LOOKUP_LOCATORS=localhost ; ./gs-agent.sh gsa.gsc 4
-# in another term session...
-$ . ${XAP_HOME}/bin/gs-ui.sh
-```
-
 #####Install, Start Kafka
 
 Follow [these quickstart instructions](http://kafka.apache.org/quickstart). In this document, we will refer to the unzipped directory as `KAFKA_HOME`. 
@@ -68,17 +49,25 @@ Steps 1-2 are sufficient. Steps 3-5 are useful for verifying that the queue is o
 export KAFKA_HOME=$(pwd)
 ```
 
-#####Install, Start InsightEdge
+#####Install, Start InsightEdge 
 
 * Download from [http://insightedge.io](http://insightedge.io)
 ```bash
 $ cd ${WORKING_DIRECTORY}
-$ unzip ~/Downloads/gigaspaces-insightedge-1.0.0-community.zip
-$ export IE_HOME="${WORKING_DIRECTORY}/gigaspaces-insightedge-1.0.0-community"
+$ unzip ~/Downloads/gigaspaces-insightedge-1.0.0-premium.zip
+$ export IE_HOME="${WORKING_DIRECTORY}/gigaspaces-insightedge-1.0.0-premium"
+$ export XAP_LOOKUP_GROUPS="xap-12.0.0"
+$ export XAP_LOOKUP_LOCATORS="127.0.0.1"
+$ mv xap-license.txt ${IE_HOME}/datagrid
 $ cd ${IE_HOME}
-$ ./sbin/insightedge.sh --mode demo 
+$ # To start Spark master and worker and XAP data grid with 1 manager and 2 containers
+$ ./sbin/insightedge.sh --mode master --master 127.0.0.1
+$ ./sbin/insightedge.sh --mode slave --master 127.0.0.1
+$ # To start XAP Management Center
+$ . ${IE_HOME}/datagrid/bin/gs-ui.sh
 ```
-(Side note: There will now be two LUS running...)
+Spark WebUI will be available at http://127.0.0.1:8080
+Spark Master connection endpoint will be at spark://127.0.0.1:7077
 
 #####Build, Deploy Processing Unit
 
@@ -98,13 +87,17 @@ $ find . -type f -name "*.jar"
 ./target/scala-2.10/financial-engineering-assembly-1.0.0.jar
 ./web/target/scala-2.10/web-assembly-1.0.0.jar
 
-$ cd ${XAP_HOME} 
-$ export XAP_LOOKUP_LOCATORS=localhost ; ./bin/gs.sh deploy ${FE_SRC_HOME}/processingUnit/target/scala-2.10/demoPU.jar
+$ cd ${IE_HOME} 
+$ export XAP_LOOKUP_LOCATORS="127.0.0.1" ; ./datagrid/bin/gs.sh deploy ${FE_SRC_HOME}/processingUnit/target/scala-2.10/demoPU.jar
 
 ```
 
 ######Run Demo Setup Apps
-#TODO
+
+```bash
+$ cd ${FE_SRC_HOME}
+$ java -cp "./demoSetup/target/scala-2.10/setup.jar:{IE_HOME}/datagrid/lib/required/*" org.insightedge.examples.financialengineering.applications.TickerSymbolCustomizer
+```
 
 ######Start Kafka Feed
 # TODO
@@ -116,13 +109,9 @@ $ export XAP_LOOKUP_LOCATORS=localhost ; ./bin/gs.sh deploy ${FE_SRC_HOME}/proce
 
 
 ```bash
-./bin/insightedge-submit --class org.insightedge.examples.financialengineering.jobs.Ingest \
-   --master spark://127.0.0.1:7077 /tmp/financial-engineering.jar
-./bin/insightedge-submit --class org.insightedge.examples.financialengineering.jobs.Ingest ^ 
-   --master spark://127.0.0.1:7077 C:\\TEMP\financial-engineering.jar
-./bin/insightedge-submit --class org.insightedge.examples.financialengineering.jobs.CalcIndividualReturns \
-   --master spark://127.0.0.1:7077 /tmp/financial-engineering.jar
-```
+$ cd ${IE_HOME} 
+$ ./bin/insightedge-submit --class org.insightedge.examples.financialengineering.jobs.MarketTickProcessor \
+   --master spark://127.0.0.1:7077 ${FE_SRC_HOME}/sparkJobs/target/scala-2.10/sparkjobs.jar
 
 ## Troubleshooting
 

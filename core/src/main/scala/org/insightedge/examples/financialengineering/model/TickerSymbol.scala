@@ -5,34 +5,21 @@ import org.insightedge.scala.annotation.SpaceId
 import scala.beans.BeanProperty
 
 /**
-  * User: jason
-  *
-  * Time: 2:27 PM
-  */
+ * User: jason
+ *
+ * Time: 2:27 PM
+ */
 case class TickerSymbol(@SpaceId(autoGenerate = false)
-                        @BeanProperty
-                        var abbreviation: String,
-                        @BeanProperty
-                        var ingestionThreadCount: Int,
-                        @BeanProperty
-                        var calcIndividualReturnThreadCount: Int,
-                        @BeanProperty
-                        var feedThreadCount: Int,
-                        @BeanProperty
-                        var calcMarketReturnThreadCount: Int) {
-  def this() = this(null, ingestionThreadCount = -1, calcIndividualReturnThreadCount = -1, feedThreadCount = -1, calcMarketReturnThreadCount = -1)
+                        @BeanProperty var abbreviation: String) {
+  def this() = this(null)
 
-  override def toString: String = {
-    abbreviation
-  }
+  override def equals(that: Any): Boolean =
+    that match {
+      case that: TickerSymbol => that.canEqual(this) && this.abbreviation == that.abbreviation
+      case _ => false
+    }
+
+  override def hashCode: Int = getAbbreviation.hashCode()
+
+  override def toString = getAbbreviation
 }
-
-trait TickerSymbolProperties {
-  val calcMarketReturnPropertyName = "calcMarketReturnThreadCount"
-  val calcIndividualPropertyName = "calcIndividualPropertyName"
-  val ingestionPropName = "ingestionThreadCount"
-  val tickPropertyName = "tickProcessorThreadCount"
-  val feedPropertyName = "feedThreadCount"
-}
-
-object TickerSymbolProperties extends TickerSymbolProperties

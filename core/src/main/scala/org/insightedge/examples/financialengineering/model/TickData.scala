@@ -1,8 +1,8 @@
 package org.insightedge.examples.financialengineering.model
 
-import org.insightedge.scala.annotation.SpaceId
+import org.insightedge.scala.annotation.{SpaceId}
 
-import scala.beans.BeanProperty
+import scala.beans.{BeanProperty, BooleanBeanProperty}
 
 /**
   *
@@ -28,7 +28,7 @@ case class TickData(
                      var dividends: Double,
                      @BeanProperty
                      var open: Double,
-                     @BeanProperty
+                     @BooleanBeanProperty
                      var processed: Boolean
                    ) {
 
@@ -41,42 +41,19 @@ case class TickData(
     dividends = -1d,
     open = -1d,
     processed = false)
-
 }
+object TickData {
 
-object TickDataHelp {
-
-  implicit class Help(d: TickData) {
-
-    def isEarlierThan(d2: TickData): Boolean = {
-      d2.timestampMs > d.timestampMs
-    }
-
-    def isSameTime(d2: TickData): Boolean = {
-      d2.timestampMs == d.timestampMs
-    }
-
-    def isLaterThan(d2: TickData): Boolean = {
-      d2.timestampMs > d.timestampMs
-    }
-
-    def toInvestment(d2: TickData): Investment = {
-      var first:TickData = null
-      var second:TickData = null
-      if (d2.isEarlierThan(d)) {
-        first = d2
-        second = d
-      } else{
-        first = d
-        second = d2
-      }
-      Investment(null,
-        buyPrice = first.close,
-        sellPrice = second.open,
-        startDateMs = first.timestampMs,
-        endDateMs = second.timestampMs
+  def apply(sym: String, t: MarketTick) = {
+     new TickData(id = null,
+        symbol = sym,
+        timestampMs = t.timestamp,
+        close = t.close,
+        volume = t.volume,
+        earnings = t.earnings,
+        dividends = t.dividends,
+        open = t.open,
+        processed = false
       )
-    }
   }
-
 }

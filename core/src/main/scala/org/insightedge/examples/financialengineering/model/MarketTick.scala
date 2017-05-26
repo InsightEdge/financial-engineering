@@ -1,9 +1,9 @@
 package org.insightedge.examples.financialengineering.model
 
-import com.gigaspaces.annotation.pojo.SpaceIndex
-import org.insightedge.scala.annotation.SpaceId
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
-import scala.beans.BeanProperty
+import org.insightedge.examples.financialengineering.CoreSettings
 
 /**
   *
@@ -11,32 +11,46 @@ import scala.beans.BeanProperty
   *
   * Time: 10:19 AM
   *
-  * date | time | open | high | low | close | volume | splits | earnings | dividends.
   */
-case class MarketTick(
-  @SpaceId(autoGenerate = true)
-  @BeanProperty
-  var id: String,
-  @BeanProperty
-  @SpaceIndex
-  var timestamp: Long,
-  @BeanProperty
-  var open: Double,
-  @BeanProperty
-  var high: Double,
-  @BeanProperty
-  var low: Double,
-  @BeanProperty
-  var close: Double,
-  @BeanProperty
-  var volume: Double,
-  @BeanProperty
-  var splits: Double,
-  @BeanProperty
-  var earnings: Double,
-  @BeanProperty
-  var dividends: Double){
 
-    def this() = this(null, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+case class MarketTick(timestamp: Long, open: Double, high: Double, low: Double, close: Double, volume: Double, splits: Double, earnings: Double, dividends: Double) {
+   
+  override def toString = s"$timestamp,$open,$high,$low,$close,$volume,$splits,$earnings,$dividends"
 
+}
+
+object MarketTick {
+  
+  def calculateTimestamp(date: String, time: String):Long = {
+    println(s"date: $date, time: $time")
+    val (year, notYear) = date.splitAt(4)
+    val (month, day) = notYear.splitAt(2)
+    val (hour, minute) = time.length match {
+      case 3 => time splitAt 1
+      case 4 => time splitAt 2
+    }
+    val tickTime = ZonedDateTime.of(year.toInt, month.toInt, day.toInt, hour.toInt, minute.toInt, 0, 0, ZoneId.of(CoreSettings.timeZone))
+    tickTime.toInstant.toEpochMilli()
+  }
+
+  /**
+   * Content in the following format:
+   *  0      1      2      3      4     5       6        7        8          9  
+   * date | time | open | high | low | close | volume | splits | earnings | dividends.
+   */
+  def apply(content: String) = {
+    val values = content.split(",")
+    val timestamp = calculateTimestamp(values(0), values(1))
+    new MarketTick(
+      timestamp,
+      open = values(2).toDouble,
+      high = values(3).toDouble,
+      low = values(4).toDouble,
+      close = values(5).toDouble,
+      volume = values(6).toDouble,
+      splits = values(7).toDouble,
+      earnings = values(8).toDouble,
+      dividends = if (values.length == 10) values(9).toDouble else 0
+    )
+  }
 }

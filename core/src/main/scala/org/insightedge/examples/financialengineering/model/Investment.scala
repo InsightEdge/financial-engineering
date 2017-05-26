@@ -32,6 +32,19 @@ case class Investment(@SpaceId(autoGenerate = true)
   def this() = this(null, -1, -1, -1, -1, -1, -1, -1, null)
 }
 
+object Investment {
+  def apply(d: TickData, d2: TickData) = {
+    val tickPair = if (d2.timestampMs > d.timestampMs) (d2, d) else (d, d2)
+    
+    new Investment(null,
+      buyPrice = tickPair._1.close,
+      sellPrice = tickPair._2.open,
+      startDateMs = tickPair._1.timestampMs,
+      endDateMs = tickPair._2.timestampMs
+    )
+  }
+}
+
 object InvestmentHelp {
 
   import java.time.Duration
@@ -56,5 +69,4 @@ object InvestmentHelp {
     }
 
   }
-
 }
