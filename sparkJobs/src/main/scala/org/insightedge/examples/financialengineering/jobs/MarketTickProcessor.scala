@@ -46,7 +46,7 @@ object MarketTickProcessor extends SparkUsage {
     investmentReturnStream.saveToGrid()
 
     val initialRDD = ssc.sparkContext.parallelize(List.empty[(Long, (Double, Double, Int))])
-    val marketReturnStream = createMarketReturns(investmentReturnStream, initialRDD, topics.size)
+    val marketReturnStream = createMarketReturns(topics.size)(initialRDD)(investmentReturnStream)
     marketReturnStream.saveToGrid()
 
     ssc.start()
@@ -69,31 +69,27 @@ object MarketTickProcessor extends SparkUsage {
     }
   }
 
-  def createMarketReturns(investmentReturnStream: DStream[InvestmentReturn], initialRDD: RDD[(Long, (Double, Double, Int))], symbolsCount: Int): DStream[MarketReturn] = {
+  def createMarketReturns(symbolsCount: Int)(initialRDD: RDD[(Long, (Double, Double, Int))])(investmentReturnStream: DStream[InvestmentReturn]): DStream[MarketReturn] = {
     val calculateSumAndSquaredSum = (ts: Long, inv: Option[InvestmentReturn], state: State[(Double, Double, Int)]) => {
       val percentageRateOfReturn = inv match {
         case Some(i) => i.getPercentageRateOfReturn()
         case None => 0
       }
       val (acc, squareAcc, count) = state.getOption.getOrElse((0.0, 0.0, 0))
-
+      
       val sum = percentageRateOfReturn + acc
       val squareSum = percentageRateOfReturn * percentageRateOfReturn + squareAcc
 
       val output = (sum, squareSum, count + 1)
       state.update(output)
-      (ts, output)
+      ts -> output
     }
 
     val sumStream = investmentReturnStream.map(i => (i.getTimestampMs, i)).mapWithState(StateSpec.function(calculateSumAndSquaredSum).initialState(initialRDD))
 
-    sumStream.filter { case (_, (_, _, count)) => count != symbolsCount }.map {
+    sumStream.filter { case (_, (_, _, count)) => count == symbolsCount }.map {
       case (ts, (sum, squareSum, count)) =>
-        val mean = sum / count
-        val squaredMean = squareSum / count
-
-        val variance = Math.sqrt(squaredMean * squaredMean - mean)
-
+        val variance = (squareSum - sum * sum / count) / (count - 1)
         new MarketReturn(null, ts, sum / count, variance, true)
     }
   }

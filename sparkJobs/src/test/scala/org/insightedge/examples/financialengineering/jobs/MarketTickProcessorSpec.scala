@@ -14,6 +14,9 @@ import com.j_spaces.core.client.SQLQuery
 import kafka.utils.Time
 import java.util.concurrent.TimeUnit
 
+import scala.concurrent.duration._
+import org.scalactic.{Equality, Tolerance}
+
 class MarketTickProcessorSpec extends FunSuite with Matchers with StreamingSuiteBase with InsightedgeContextProvider with GigaSpaceSpec with InsightedgeSharedContext with BeforeAndAfterEach with SpaceUsage {
     
     var datagrid: GigaSpace = _
@@ -88,4 +91,40 @@ class MarketTickProcessorSpec extends FunSuite with Matchers with StreamingSuite
       testOperation[TickData, InvestmentReturn](input, MarketTickProcessor.createInvestmentReturns _, expected, ordered = true)
     }
     
+  test("creating MarketReturns") {
+    val curTime = System.currentTimeMillis()
+    val count = 2
+    
+    val ir1 = InvestmentReturn(null, curTime, "1", 0.1)
+    val ir11 = InvestmentReturn(null, curTime, "2", 0.16)
+    
+    val oneSec = (1 seconds).toMillis
+      
+    val ir2 = InvestmentReturn(null, curTime + oneSec, "3", 0.2)
+    val ir21 = InvestmentReturn(null, curTime + oneSec, "4", 0.32)
+    
+    val ir3 = InvestmentReturn(null, curTime + 2 * oneSec, "5", 0.3)
+    val ir31 = InvestmentReturn(null, curTime + 2 * oneSec, "6", 0.2)
+    
+    val ir4 = InvestmentReturn(null, curTime + 3 * oneSec, "7", 0.4)
+    val ir41 = InvestmentReturn(null, curTime + 3 * oneSec, "8", 0.35)
+    
+    val input = List(List(ir1, ir2, ir11, ir3), List(ir21, ir31, ir4, ir41))
+    val expected = List(List(MarketReturn(null, curTime, 0.13, 0.0018, true)), 
+            List(MarketReturn(null, curTime + oneSec, 0.26, 0.0072, true), MarketReturn(null, curTime + 2 * oneSec, 0.25, 0.005, true), MarketReturn(null, curTime + 3 * oneSec, 0.375, 0.00125, true)))
+
+    implicit val marketReturnEquality = new Equality[MarketReturn] {
+      override def areEqual(a: MarketReturn, b: Any): Boolean =
+        b match {
+          case n: MarketReturn => {
+            n.canEqual(a) && a.timestampMs == n.timestampMs && a.percentageRateOfReturn === n.percentageRateOfReturn +- .00001 && a.variance === n.variance +- .00001 && a.processed == n.processed
+          }
+          case _ => false
+        }
+    }
+    
+    val rdd = sc.emptyRDD[(Long, (Double, Double, Int))]
+    testOperation[InvestmentReturn, MarketReturn](input, MarketTickProcessor.createMarketReturns(2)(rdd) _, expected, ordered = true)    
+  }
+      
 }

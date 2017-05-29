@@ -22,9 +22,8 @@ case class MarketTick(timestamp: Long, open: Double, high: Double, low: Double, 
 object MarketTick {
   
   def calculateTimestamp(date: String, time: String):Long = {
-    println(s"date: $date, time: $time")
-    val (year, notYear) = date.splitAt(4)
-    val (month, day) = notYear.splitAt(2)
+    val (year, monthAndDay) = date.splitAt(4)
+    val (month, day) = monthAndDay.splitAt(2)
     val (hour, minute) = time.length match {
       case 3 => time splitAt 1
       case 4 => time splitAt 2
