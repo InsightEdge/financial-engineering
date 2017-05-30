@@ -100,7 +100,7 @@ $ export XAP_LOOKUP_LOCATORS="127.0.0.1" ; ./datagrid/bin/gs.sh deploy ${FE_SRC_
 
 ```bash
 $ cd ${FE_SRC_HOME}
-$ java -cp "./demoSetup/target/scala-2.10/setup.jar:{IE_HOME}/datagrid/lib/required/*" org.insightedge.examples.financialengineering.applications.TickerSymbolCustomizer
+$ java -cp "./demoSetup/target/scala-2.10/setup.jar:${IE_HOME}/datagrid/lib/required/*" org.insightedge.examples.financialengineering.applications.TickerSymbolCustomizer
 ```
 
 ######Start Kafka Feed

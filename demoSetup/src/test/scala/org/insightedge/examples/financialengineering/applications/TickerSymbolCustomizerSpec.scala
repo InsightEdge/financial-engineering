@@ -19,19 +19,19 @@ class TickerSymbolCustomizerSpec extends FlatSpec with BeforeAndAfterEach with G
   }
  
   "A TickerSymbolCustomizer" should "not load symbols from empty file" in {
-    TickerSymbolCustomizer.main(Array("/empty-cap-symbol.txt"))
+    TickerSymbolCustomizer.main(Array("empty-cap-symbol.txt"))
 
     assert(datagrid.count(null) == 0)
   }
 
   "A TickerSymbolCustomizer" should "load one symbol" in {
-    TickerSymbolCustomizer.main(Array("/one-cap-symbol.txt"))
+    TickerSymbolCustomizer.main(Array("one-cap-symbol.txt"))
 
     assert(datagrid.readById(new IdQuery(classOf[TickerSymbol], "TEST")) != null)
   }
 
   "A TickerSymbolCustomizer" should "load 10 symbols" in {
-    TickerSymbolCustomizer.main(Array("/cap-symbols.txt"))
+    TickerSymbolCustomizer.main(Array())
 
     val symbols = datagrid.readMultiple(new TickerSymbol())
     assert(symbols != null)
@@ -39,8 +39,8 @@ class TickerSymbolCustomizerSpec extends FlatSpec with BeforeAndAfterEach with G
   }
   
   "A TickerSymbolCustomizer" should "not load same symbols twice" in {
-    TickerSymbolCustomizer.main(Array("/cap-symbols.txt"))
-    TickerSymbolCustomizer.main(Array("/cap-symbols.txt"))
+    TickerSymbolCustomizer.main(Array())
+    TickerSymbolCustomizer.main(Array())
     
     val symbols = datagrid.readMultiple(new TickerSymbol())
     assert(symbols != null)

@@ -44,7 +44,7 @@ object TickerSymbolCustomizer extends SpaceUsage {
     var reader : Source = null
 
     try {
-      reader = Source.fromInputStream(getClass.getResourceAsStream(if (args.length > 0) args(0) else AppSettings.getTickerSymbolsFilename))
+      reader = Source.fromInputStream(getClass.getResourceAsStream("/" + (if (args.length > 0) args(0) else AppSettings.getTickerSymbolsFilename)))
       val limit = AppSettings.getTickerSymbolLimit
       println(s"Adding $limit new TickerSymbols to the system")
       val lines = reader.getLines().take(limit).foreach { l =>
