@@ -10,11 +10,11 @@ fork in Test := true
 javaOptions in Test := Seq("-Djava.rmi.server.hostname=127.0.0.1", "-Xmx1024M")
 
 libraryDependencies ++= Seq(
-  "org.gigaspaces" % "xap-openspaces" % xapVersion exclude("javax.jms", "jms"),
-  "org.gigaspaces" % "xap-common" % xapVersion exclude("javax.jms", "jms"),
-  "org.gigaspaces" % "xap-datagrid" % xapVersion exclude("javax.jms", "jms"),
-  "org.springframework" % "spring-core" % springVersion,
-  "org.springframework" % "spring-tx" % springVersion,
+  "org.gigaspaces" % "xap-openspaces" % xapVersion % "provided" exclude("javax.jms", "jms"),
+  "org.gigaspaces" % "xap-common" % xapVersion % "provided" exclude("javax.jms", "jms"),
+  "org.gigaspaces" % "xap-datagrid" % xapVersion % "provided" exclude("javax.jms", "jms"),
+  "org.springframework" % "spring-core" % springVersion % "provided",
+  "org.springframework" % "spring-tx" % springVersion % "provided",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   "com.typesafe" % "config" % "1.2.1"
 )

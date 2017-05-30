@@ -33,7 +33,7 @@ lazy val processingUnit = project.
     assemblyJarName := "demoPU.jar"
   )
 lazy val sparkJobs = project.
-  dependsOn(core % "test->compile;test->test;compile->compile", demoSetup).
+  dependsOn(core % "test->compile;test->test;compile->compile").
   settings(commonSettings).
   settings(
     assemblyJarName := "sparkjobs.jar"

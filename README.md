@@ -11,8 +11,9 @@ This repository contains working code for an [InsightEdge](http://insightedge.io
 * Java 1.8 (OSX 1.8.0_60-b27 used)
 * Kafka 2.11-0.10.2.0
 * SBT 0.13.13
+* Maven
 * InsightEdge 1.0.0 with XAP 12.0.0 (premium used)
-* Development license
+* XAP license
 
 ####Demo Steps
 
@@ -63,10 +64,13 @@ $ cd ${IE_HOME}
 $ # To start Spark master and worker and XAP data grid with 1 manager and 2 containers
 $ ./sbin/insightedge.sh --mode master --master 127.0.0.1
 $ ./sbin/insightedge.sh --mode slave --master 127.0.0.1
+$ # To install artifacts to your local Maven repository
+$ ./sbin/insightedge-maven.sh
 $ # To start XAP Management Center
-$ . ${IE_HOME}/datagrid/bin/gs-ui.sh
+$ datagrid/bin/gs-ui.sh
 ```
 Spark WebUI will be available at http://127.0.0.1:8080
+
 Spark Master connection endpoint will be at spark://127.0.0.1:7077
 
 #####Build, Deploy Processing Unit
