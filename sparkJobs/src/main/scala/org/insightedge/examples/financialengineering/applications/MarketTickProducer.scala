@@ -14,7 +14,7 @@ case class MarketTickProducer(baseDir: String, ts: TickerSymbol, producer: Produ
   
   private val firstValue: Long = 19980106 // the start "date" of the data set we're using
   
-  private val maxRetryCount = 10
+  private val maxRetryCount = 20
   private var retry = 0
   
   def run() {

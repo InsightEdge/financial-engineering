@@ -32,7 +32,7 @@ object MarketTickProcessor extends SparkUsage {
 
     val topics = TickerSymbols.all().map(s => (s.getAbbreviation)).toSet
 
-    val ssc: StreamingContext = makeStreamingContext(ingestionAppName, ingestContextFrequencyMilliseconds)
+    val ssc: StreamingContext = makeStreamingContext()
 
     val marketTickStream: DStream[(String, MarketTick)] = KafkaUtils.createDirectStream[String, MarketTick, StringDecoder, MarketTickDecoder](
       ssc,

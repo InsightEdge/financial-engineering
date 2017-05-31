@@ -104,18 +104,22 @@ $ java -cp "./demoSetup/target/scala-2.10/setup.jar:${IE_HOME}/datagrid/lib/requ
 ```
 
 ######Start Kafka Feed
-# TODO
 
-######View Results
-# TODO
+```bash
+$ cd ${FE_SRC_HOME}
+$ java -cp "./sparkJobs/target/scala-2.10/sparkjobs.jar:${IE_HOME}/datagrid/lib/required/*" org.insightedge.examples.financialengineering.applications.Feed <path to stock data dir> 1
+```
 
 ######Submit Spark Jobs
 
-
 ```bash
 $ cd ${IE_HOME} 
-$ ./bin/insightedge-submit --class org.insightedge.examples.financialengineering.jobs.MarketTickProcessor \
-   --master spark://127.0.0.1:7077 ${FE_SRC_HOME}/sparkJobs/target/scala-2.10/sparkjobs.jar
+$ ./bin/insightedge-submit --class org.insightedge.examples.financialengineering.jobs.MarketTickProcessor --master spark://127.0.0.1:7077 ${FE_SRC_HOME}/sparkJobs/target/scala-2.10/sparkjobs.jar
+```
+
+######View Results
+
+Navigate to Space Browser in XAP Management Center to query individual and market returns
 
 ## Troubleshooting
 
