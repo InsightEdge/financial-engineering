@@ -12,7 +12,6 @@ import org.insightedge.examples.financialengineering.CoreSettings
   * Time: 10:19 AM
   *
   */
-
 case class MarketTick(timestamp: Long, open: Double, high: Double, low: Double, close: Double, volume: Double, splits: Double, earnings: Double, dividends: Double) {
    
   override def toString = s"$timestamp,$open,$high,$low,$close,$volume,$splits,$earnings,$dividends"
@@ -34,8 +33,8 @@ object MarketTick {
 
   /**
    * Content in the following format:
-   *  0      1      2      3      4     5       6        7        8          9  
-   * date | time | open | high | low | close | volume | splits | earnings | dividends.
+   *  0    1    2    3    4   5     6      7      8        9  
+   * date,time,open,high,low,close,volume,splits,earnings,dividends
    */
   def apply(content: String) = {
     val values = content.split(",")

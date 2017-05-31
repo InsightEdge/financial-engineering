@@ -39,9 +39,12 @@ object Feed {
     try {
       TickerSymbols.all().map(t => {
         pool.submit(new MarketTickProducer(baseDir, t, producer))
-      }).foreach(f => f.get(30, TimeUnit.SECONDS))
+      })
     } finally {
       pool.shutdown()
+      if (!pool.awaitTermination(10, TimeUnit.MINUTES)) {
+        pool.shutdownNow()
+      }
       producer.close()
     }
   }
