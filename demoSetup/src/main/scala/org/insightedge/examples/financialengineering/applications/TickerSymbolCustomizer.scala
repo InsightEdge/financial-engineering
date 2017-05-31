@@ -16,9 +16,26 @@ import scala.io.Source;
  * Time: 7:25 AM
  * To start processing new data for new ticker symbols, run this application.
  */
-object TickerSymbolCustomizer extends SpaceUsage {
+object TickerSymbolCustomizer extends App with SpaceUsage {
 
   val space: GigaSpace = makeClusteredProxy()
+
+  var reader: Source = null
+
+  try {
+    reader = Source.fromInputStream(getClass.getResourceAsStream("/" + (if (args.length > 0) args(0) else AppSettings.getTickerSymbolsFilename)))
+    val limit = AppSettings.getTickerSymbolLimit
+    println(s"Adding $limit new TickerSymbols to the system")
+    val lines = reader.getLines().take(limit).foreach { l =>
+      val abbr = l.split(",")(0).toUpperCase
+      println(s"Adding TickerSymbol '$abbr' to the system")
+      tryToAddSymbol(new TickerSymbol(abbr))
+    }
+  } finally {
+    if (reader != null) {
+      reader.close()
+    }
+  }
 
   /**
    *  Attempts to add the symbol to the Data Grid.
@@ -40,22 +57,4 @@ object TickerSymbolCustomizer extends SpaceUsage {
     }
   }
 
-  def main(args: Array[String]): Unit = {
-    var reader : Source = null
-
-    try {
-      reader = Source.fromInputStream(getClass.getResourceAsStream("/" + (if (args.length > 0) args(0) else AppSettings.getTickerSymbolsFilename)))
-      val limit = AppSettings.getTickerSymbolLimit
-      println(s"Adding $limit new TickerSymbols to the system")
-      val lines = reader.getLines().take(limit).foreach { l =>
-        val abbr = l.split(",")(0).toUpperCase
-        println(s"Adding TickerSymbol '$abbr' to the system")
-        tryToAddSymbol(new TickerSymbol(abbr))
-      }
-    } finally {
-      if (reader != null) {
-        reader.close()
-      }
-    }
-  }
 }

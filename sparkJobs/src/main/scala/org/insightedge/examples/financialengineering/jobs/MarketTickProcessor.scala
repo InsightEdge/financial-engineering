@@ -24,35 +24,32 @@ import InvestmentHelp._
  * Reads from Kafka, Writes to Data Grid.
  *
  */
-object MarketTickProcessor extends SparkUsage {
+object MarketTickProcessor extends App with SparkUsage {
 
   import org.apache.spark.streaming.kafka._
 
-  def main(args: Array[String]): Unit = {
+  val topics = TickerSymbols.all().map(s => (s.getAbbreviation)).toSet
 
-    val topics = TickerSymbols.all().map(s => (s.getAbbreviation)).toSet
+  val ssc: StreamingContext = makeStreamingContext()
 
-    val ssc: StreamingContext = makeStreamingContext()
+  val marketTickStream: DStream[(String, MarketTick)] = KafkaUtils.createDirectStream[String, MarketTick, StringDecoder, MarketTickDecoder](
+    ssc,
+    KafkaSettings.kafkaParams,
+    topics)
 
-    val marketTickStream: DStream[(String, MarketTick)] = KafkaUtils.createDirectStream[String, MarketTick, StringDecoder, MarketTickDecoder](
-      ssc,
-      KafkaSettings.kafkaParams,
-      topics)
+  val tickStream = createTickData(marketTickStream)
+  tickStream.saveToGrid()
 
-    val tickStream = createTickData(marketTickStream)
-    tickStream.saveToGrid()
+  val investmentReturnStream = createInvestmentReturns(tickStream)
+  investmentReturnStream.saveToGrid()
 
-    val investmentReturnStream = createInvestmentReturns(tickStream)
-    investmentReturnStream.saveToGrid()
+  val initialRDD = ssc.sparkContext.parallelize(List.empty[(Long, (Double, Double, Int))])
+  val marketReturnStream = createMarketReturns(topics.size)(initialRDD)(investmentReturnStream)
+  marketReturnStream.saveToGrid()
 
-    val initialRDD = ssc.sparkContext.parallelize(List.empty[(Long, (Double, Double, Int))])
-    val marketReturnStream = createMarketReturns(topics.size)(initialRDD)(investmentReturnStream)
-    marketReturnStream.saveToGrid()
-
-    ssc.start()
-    ssc.awaitTerminationOrTimeout(TimeUnit.MINUTES.toMillis(10))
-    ssc.sparkContext.stopInsightEdgeContext()
-  }
+  ssc.start()
+  ssc.awaitTerminationOrTimeout(TimeUnit.MINUTES.toMillis(10))
+  ssc.sparkContext.stopInsightEdgeContext()
 
   def createTickData(marketTickStream: DStream[(String, MarketTick)]): DStream[TickData] = marketTickStream.map[TickData] { case (sym, t) => TickData(sym, t) }
 
@@ -60,11 +57,11 @@ object MarketTickProcessor extends SparkUsage {
 
     tickStream.transform { tickRdd =>
       val tickPairRdd = tickRdd.zipWithGridSql[TickData](s"symbol = ? AND timestampMs <= ? AND timestampMs >= ? ORDER BY timestampMs DESC", createMonthAgoTickParams, None)
-      
+
       val invReturnRdd = tickPairRdd.collect { case (cur, Seq(firstRes, _*)) => Investment(cur, firstRes) }
         .map(inv => new InvestmentReturn(null, inv.getEndDateMs, inv.getId, inv.compoundAnnualGrowthRate()))
 
-      tickRdd.map(td => {td.setProcessed(true); td}).saveToGrid()
+      tickRdd.map(td => { td.setProcessed(true); td }).saveToGrid()
       invReturnRdd
     }
   }
@@ -76,7 +73,7 @@ object MarketTickProcessor extends SparkUsage {
         case None => 0
       }
       val (acc, squareAcc, count) = state.getOption.getOrElse((0.0, 0.0, 0))
-      
+
       val sum = percentageRateOfReturn + acc
       val squareSum = percentageRateOfReturn * percentageRateOfReturn + squareAcc
 
