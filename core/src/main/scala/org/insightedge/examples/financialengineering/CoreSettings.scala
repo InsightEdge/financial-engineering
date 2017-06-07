@@ -18,21 +18,9 @@ object CoreSettings {
   val ticksPerDay: Int = 440
   val ticksPerMonth: Long = ticksPerDay * tradingDaysPerMonth
 
-  val feedAppName = "TickDataFromCsvFeed"
-
-  val processorAppName = "ProcessTicks"
-  val processTicksThreads = 1
-  val processTickFrequencyMs = 750
-
-  val ingestionThreadsPerSymbol = 1
-  val calcIndividualThreadsPerSymbol = 1
-  val calcMarketReturnThreadsPerSymbol = 1
-
   val spaceName = "finEngSpace"
   val spaceLookupGroups = "xap-12.0.0"
-  // private val spaceLookupLocators = "localhost:7102"
   val spaceLookupLocators = "localhost"
-//  val spaceLookupLocators = "macattack"
-  val remoteJiniUrl = s"jini://$spaceLookupLocators/*/$spaceName?groups=$spaceLookupGroups"
 
+  val remoteJiniUrl = s"jini://$spaceLookupLocators/*/$spaceName?groups=$spaceLookupGroups"
 }

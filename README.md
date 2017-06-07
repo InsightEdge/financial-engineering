@@ -9,10 +9,10 @@ This repository contains working code for an [InsightEdge](http://insightedge.io
 ####Requirements
 
 * Java 1.8 (OSX 1.8.0_60-b27 used)
-* Kafka 2.11-0.10.2.0
+* Kafka 2.10-0.8.2.1
 * SBT 0.13.13
-* Maven
-* InsightEdge 1.0.0 with XAP 12.0.0 (premium used)
+* Maven 3.1+
+* InsightEdge premium 1.0.0 with XAP 12.0.0 and Spark 1.6
 * XAP license
 
 ####Demo Steps

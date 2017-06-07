@@ -59,7 +59,7 @@ object MarketTickProcessor extends App with SparkUsage with SpaceUsage {
   marketReturnStream.saveToGrid()
 
   ssc.start()
-  ssc.awaitTerminationOrTimeout(TimeUnit.MINUTES.toMillis(10))
+  ssc.awaitTermination()
   sc.stopInsightEdgeContext()
 
   def createTickData(marketTickStream: DStream[(String, MarketTick)]): DStream[TickData] = marketTickStream.map[TickData] { case (sym, t) => TickData(sym, t) }

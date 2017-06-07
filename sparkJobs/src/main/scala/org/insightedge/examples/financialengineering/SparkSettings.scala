@@ -11,7 +11,7 @@ object SparkSettings {
   val sparkAppName = "CalcIndividualAndMarketReturn"
   val sparkContextFrequencyMs = 2000
 
-  val sparkMasterUrl = "local[*]"
+  val sparkMasterUrl = "spark://127.0.0.1:7077"
   val sparkCheckpointDir = "/tmp"
 
 }
