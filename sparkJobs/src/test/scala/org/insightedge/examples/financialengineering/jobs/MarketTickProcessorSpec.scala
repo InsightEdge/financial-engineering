@@ -49,12 +49,7 @@ class MarketTickProcessorSpec extends FunSuite with Matchers with StreamingSuite
     testOperation[TickData, InvestmentReturn](input, MarketTickProcessor.createInvestmentReturns(spaceUrl) _, expected, ordered = true)
 
     val res = datagrid.readMultiple(new SQLQuery[TickData](classOf[TickData], ""))
-    res.size should be(2)
-    // throws MatchError if the result data is invalid
-    res.map {
-      case TickData(_, "AAPL", 884070480000l, 0.5166, 61481.0, 0.0, 0.0, 0.5166, true) =>
-      case TickData(_, "AAPL", 884153640000l, 0.6142, 107592.0, 0.0, 0.0, 0.6142, true) =>
-    }
+    res.size should be(0)
   }
 
   val curT1 = TickData(null, "AAPL", 884070480000l, 0.5166, 61481.0, 0.0, 0.0, 0.5166, false)
@@ -87,41 +82,46 @@ class MarketTickProcessorSpec extends FunSuite with Matchers with StreamingSuite
 
     val input = List(List(curT1, curT2), List(curT3, curT4))
 
-    val expected = List(List(InvestmentReturn(null, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), null, 6.011751683933395), InvestmentReturn(null, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), null, 5.845783917644185)),
-      List(InvestmentReturn(null, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), null, 48.894371883506714), InvestmentReturn(null, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), null, 48.894371883506714)))
-
-    testOperation[TickData, InvestmentReturn](input, MarketTickProcessor.createInvestmentReturns(spaceUrl) _, expected, ordered = true)
+    val expectedInvestmentReturns = List(List(InvestmentReturn(null, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), Investment(null, 0.5166, 0.4392, curT1.getTimestampMs, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), 0.0, 0.0, 0.0, "NYSE"), 6.011751683933395), 
+        InvestmentReturn(null, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), Investment(null, 0.5205, 0.4434, curT2.getTimestampMs, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), 0.0, 0.0, 0.0, "NYSE"), 5.845783917644185)),
+      List(InvestmentReturn(null, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), Investment(null, 0.6142, 0.4434,  curT3.getTimestampMs, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), 0.0, 0.0, 0.0, "NYSE"), 48.894371883506714), 
+          InvestmentReturn(null, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), Investment(null, 0.6142, 0.4434,  curT4.getTimestampMs, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), 0.0, 0.0, 0.0, "NYSE"), 48.894371883506714)))
+          
+    testOperation[TickData, InvestmentReturn](input, MarketTickProcessor.createInvestmentReturns(spaceUrl) _, expectedInvestmentReturns, ordered = true)
   }
 
   test("creating InvestementReturns if tick data for previous month is in the same batch") {
-    val input = List(List(monthAgoAnd6minTick1, monthAgoAnd5minTick1, monthAgoAnd4minTick1, monthAgoAnd5minTick2, monthAgoAnd4minTick2, monthAgoAnd4minTick3, monthAgoAnd3minTick3, monthAgoAnd6minTick4, monthAgoAnd5minTick4, monthAgoAnd4minTick4, monthAgoAnd3minTick4, curT1, curT2), List(curT3, curT4))
+    val input = List(List(monthAgoAnd6minTick1, monthAgoAnd5minTick1, monthAgoAnd4minTick1, curT1), List(monthAgoAnd5minTick2, monthAgoAnd4minTick2, curT2), List(monthAgoAnd4minTick3, monthAgoAnd3minTick3, curT3), List(monthAgoAnd6minTick4, monthAgoAnd5minTick4, monthAgoAnd4minTick4, monthAgoAnd3minTick4, curT4))
 
-    val expected = List(List(InvestmentReturn(null, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), null, 6.011751683933395), InvestmentReturn(null, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), null, 5.845783917644185)),
-      List(InvestmentReturn(null, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), null, 48.894371883506714), InvestmentReturn(null, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), null, 48.894371883506714)))
-    testOperation[TickData, InvestmentReturn](input, MarketTickProcessor.createInvestmentReturns(spaceUrl) _, expected, ordered = true)
+    val expectedInvestmentReturns = List(List(InvestmentReturn(null, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), Investment(null, 0.5166, 0.4392, curT1.getTimestampMs, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), 0.0, 0.0, 0.0, "NYSE"), 6.011751683933395)), 
+      List(InvestmentReturn(null, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), Investment(null, 0.5205, 0.4434, curT2.getTimestampMs, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), 0.0, 0.0, 0.0, "NYSE"), 5.845783917644185)),
+      List(InvestmentReturn(null, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), Investment(null, 0.6142, 0.4434,  curT3.getTimestampMs, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), 0.0, 0.0, 0.0, "NYSE"), 48.894371883506714)), 
+      List(InvestmentReturn(null, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), Investment(null, 0.6142, 0.4434,  curT4.getTimestampMs, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), 0.0, 0.0, 0.0, "NYSE"), 48.894371883506714)))
+          
+    testOperation[TickData, InvestmentReturn](input, MarketTickProcessor.createInvestmentReturns(spaceUrl) _, expectedInvestmentReturns, ordered = true)
   }
 
   test("creating MarketReturns") {
     val curTime = System.currentTimeMillis()
     val count = 2
 
-    val ir1 = InvestmentReturn(null, curTime, "1", 0.1)
-    val ir11 = InvestmentReturn(null, curTime, "2", 0.16)
+    val ir1 = InvestmentReturn(null, curTime, null, 0.1)
+    val ir11 = InvestmentReturn(null, curTime, null, 0.16)
 
     val oneSec = (1 seconds).toMillis
 
-    val ir2 = InvestmentReturn(null, curTime + oneSec, "3", 0.2)
-    val ir21 = InvestmentReturn(null, curTime + oneSec, "4", 0.32)
+    val ir2 = InvestmentReturn(null, curTime + oneSec, null, 0.2)
+    val ir21 = InvestmentReturn(null, curTime + oneSec, null, 0.32)
 
-    val ir3 = InvestmentReturn(null, curTime + 2 * oneSec, "5", 0.3)
-    val ir31 = InvestmentReturn(null, curTime + 2 * oneSec, "6", 0.2)
+    val ir3 = InvestmentReturn(null, curTime + 2 * oneSec, null, 0.3)
+    val ir31 = InvestmentReturn(null, curTime + 2 * oneSec, null, 0.2)
 
-    val ir4 = InvestmentReturn(null, curTime + 3 * oneSec, "7", 0.4)
-    val ir41 = InvestmentReturn(null, curTime + 3 * oneSec, "8", 0.35)
+    val ir4 = InvestmentReturn(null, curTime + 3 * oneSec, null, 0.4)
+    val ir41 = InvestmentReturn(null, curTime + 3 * oneSec, null, 0.35)
 
     val input = List(List(ir1, ir2, ir11, ir3), List(ir21, ir31, ir4, ir41))
-    val expected = List(List(MarketReturn(null, curTime, 0.13, 0.0018, true)),
-      List(MarketReturn(null, curTime + oneSec, 0.26, 0.0072, true), MarketReturn(null, curTime + 2 * oneSec, 0.25, 0.005, true), MarketReturn(null, curTime + 3 * oneSec, 0.375, 0.00125, true)))
+    val expected = List(List(MarketReturn(null, curTime, 0.13, 0.0018, false)),
+      List(MarketReturn(null, curTime + oneSec, 0.26, 0.0072, false), MarketReturn(null, curTime + 2 * oneSec, 0.25, 0.005, false), MarketReturn(null, curTime + 3 * oneSec, 0.375, 0.00125, false)))
 
     implicit val marketReturnEquality = new Equality[MarketReturn] {
       override def areEqual(a: MarketReturn, b: Any): Boolean =

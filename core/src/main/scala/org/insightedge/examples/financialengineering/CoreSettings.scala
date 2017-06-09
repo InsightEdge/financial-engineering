@@ -14,6 +14,7 @@ object CoreSettings {
   val msPerDay: Long = 24 * 60 * 60 * 1000
   val msPerMonth: Long = 30 * msPerDay
 
+  val ticksWindowMs: Long = 3 * msPerDay
   val tradingDaysPerMonth: Short = 21
   val ticksPerDay: Int = 440
   val ticksPerMonth: Long = ticksPerDay * tradingDaysPerMonth
