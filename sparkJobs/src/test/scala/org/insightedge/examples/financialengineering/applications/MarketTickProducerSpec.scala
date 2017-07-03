@@ -13,6 +13,7 @@ import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.StringDeserializer
 import scala.collection.JavaConverters._
 import org.apache.kafka.common.TopicPartition
+import org.insightedge.examples.financialengineering.KafkaSettings
 
 class MarketTickProducerSpec extends WordSpec with EmbeddedKafka with Consumers with Matchers {
   "'AAPL' market tick records" should {
@@ -37,8 +38,8 @@ class MarketTickProducerSpec extends WordSpec with EmbeddedKafka with Consumers 
         marketTickProducer.run()
          
         val consumer = withConsumer[String, MarketTick, Unit] { consumer =>
-          consumer.subscribe(Set(testSym.getAbbreviation).asJava)
-          val res = consumer.poll(5000).records(new TopicPartition("AAPL", 0)).asScala.map(cr => cr.value())
+          consumer.subscribe(Set(KafkaSettings.kafkaTopic).asJava)
+          val res = consumer.poll(5000).records(new TopicPartition(KafkaSettings.kafkaTopic, 0)).asScala.map(cr => cr.value())
 
           //'allstocks_19980106' file
           val mt1 = MarketTick(884095680000l, 0.5166, 0.5166, 0.5166, 0.5166, 61481.0, 28.0, 0.0, 0.0)

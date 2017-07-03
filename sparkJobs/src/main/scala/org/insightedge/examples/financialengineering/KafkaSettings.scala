@@ -8,6 +8,8 @@ import collection.JavaConverters._
   */
 object KafkaSettings {
   
+  val kafkaTopic = "tickerSymbols"
+  
   private val bootstrapServers = "localhost:9092"
   private val bootstrapServersKey = "bootstrap.servers"
 
@@ -21,6 +23,7 @@ object KafkaSettings {
     "request.required.acks" -> "0",
     "producer.type" -> "sync",
     "key.serializer" -> "org.apache.kafka.common.serialization.StringSerializer",
-    "value.serializer" -> classOf[org.insightedge.examples.financialengineering.kafka.MarketTickSerializer].getName
+    "value.serializer" -> classOf[org.insightedge.examples.financialengineering.kafka.MarketTickSerializer].getName,
+    "partitioner.class" -> "kafka.producer.ByteArrayPartitioner"
   ).asJava
 }

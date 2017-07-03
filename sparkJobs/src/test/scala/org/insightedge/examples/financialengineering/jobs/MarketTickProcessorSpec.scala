@@ -17,6 +17,7 @@ import org.scalatest.Matchers
 
 import com.holdenkarau.spark.testing._
 import com.j_spaces.core.client.SQLQuery
+import org.apache.commons.math3.stat.regression.SimpleRegression
 
 class MarketTickProcessorSpec extends FunSuite with Matchers with StreamingSuiteBase with InsightedgeContextProvider with GigaSpaceSpec with InsightedgeSharedContext with BeforeAndAfterEach with SpaceUsage {
 
@@ -77,27 +78,37 @@ class MarketTickProcessorSpec extends FunSuite with Matchers with StreamingSuite
   val monthAgoAnd4minTick4 = TickData(null, "AAPL", monthAgoTs4 - TimeUnit.MINUTES.toMillis(4), 0.4434, 611736, 0.0, 0.0, 0.4434, true)
   val monthAgoAnd3minTick4 = TickData(null, "AAPL", monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), 0.4392, 82999.4, 0.0, 0.0, 0.4434, true)
 
+  implicit val equality = new Equality[InvestmentReturn] {
+      override def areEqual(a: InvestmentReturn, b: Any): Boolean =
+        b match {
+          case n: InvestmentReturn => {
+            n.canEqual(a) && a.tickerSymbol == n.tickerSymbol && a.percentageRateOfReturn === n.percentageRateOfReturn +- .0001 && a.timestampMs == n.timestampMs
+          }
+          case _ => false
+        }
+    }
+  
   test("creating InvestementReturns if tick data for previous month is in the gird") {
     datagrid.writeMultiple(Array(monthAgoAnd6minTick1, monthAgoAnd5minTick1, monthAgoAnd4minTick1, monthAgoAnd5minTick2, monthAgoAnd4minTick2, monthAgoAnd4minTick3, monthAgoAnd3minTick3, monthAgoAnd6minTick4, monthAgoAnd5minTick4, monthAgoAnd4minTick4, monthAgoAnd3minTick4))
 
     val input = List(List(curT1, curT2), List(curT3, curT4))
 
-    val expectedInvestmentReturns = List(List(InvestmentReturn(null, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), Investment(null, 0.5166, 0.4392, curT1.getTimestampMs, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), 0.0, 0.0, 0.0, "NYSE"), 6.011751683933395), 
-        InvestmentReturn(null, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), Investment(null, 0.5205, 0.4434, curT2.getTimestampMs, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), 0.0, 0.0, 0.0, "NYSE"), 5.845783917644185)),
-      List(InvestmentReturn(null, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), Investment(null, 0.6142, 0.4434,  curT3.getTimestampMs, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), 0.0, 0.0, 0.0, "NYSE"), 48.894371883506714), 
-          InvestmentReturn(null, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), Investment(null, 0.6142, 0.4434,  curT4.getTimestampMs, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), 0.0, 0.0, 0.0, "NYSE"), 48.894371883506714)))
-          
+    val expectedInvestmentReturns = List(List(InvestmentReturn(null, curT1.getTimestampMs, "AAPL", 6.0117), 
+        InvestmentReturn(null, curT2.getTimestampMs, "AAPL", 5.8457)),
+      List(InvestmentReturn(null, curT3.getTimestampMs, "AAPL", 48.8943), 
+          InvestmentReturn(null, curT4.getTimestampMs, "AAPL", 54.9304)))
+
     testOperation[TickData, InvestmentReturn](input, MarketTickProcessor.createInvestmentReturns(spaceUrl) _, expectedInvestmentReturns, ordered = true)
   }
 
   test("creating InvestementReturns if tick data for previous month is in the same batch") {
     val input = List(List(monthAgoAnd6minTick1, monthAgoAnd5minTick1, monthAgoAnd4minTick1, curT1), List(monthAgoAnd5minTick2, monthAgoAnd4minTick2, curT2), List(monthAgoAnd4minTick3, monthAgoAnd3minTick3, curT3), List(monthAgoAnd6minTick4, monthAgoAnd5minTick4, monthAgoAnd4minTick4, monthAgoAnd3minTick4, curT4))
 
-    val expectedInvestmentReturns = List(List(InvestmentReturn(null, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), Investment(null, 0.5166, 0.4392, curT1.getTimestampMs, monthAgoTs1 - TimeUnit.MINUTES.toMillis(4), 0.0, 0.0, 0.0, "NYSE"), 6.011751683933395)), 
-      List(InvestmentReturn(null, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), Investment(null, 0.5205, 0.4434, curT2.getTimestampMs, monthAgoTs2 - TimeUnit.MINUTES.toMillis(4), 0.0, 0.0, 0.0, "NYSE"), 5.845783917644185)),
-      List(InvestmentReturn(null, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), Investment(null, 0.6142, 0.4434,  curT3.getTimestampMs, monthAgoTs3 - TimeUnit.MINUTES.toMillis(3), 0.0, 0.0, 0.0, "NYSE"), 48.894371883506714)), 
-      List(InvestmentReturn(null, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), Investment(null, 0.6142, 0.4434,  curT4.getTimestampMs, monthAgoTs4 - TimeUnit.MINUTES.toMillis(3), 0.0, 0.0, 0.0, "NYSE"), 48.894371883506714)))
-          
+    val expectedInvestmentReturns = List(List(InvestmentReturn(null, curT1.getTimestampMs, "AAPL", 6.0117)), 
+      List(InvestmentReturn(null, curT2.getTimestampMs, "AAPL", 5.8457)),
+      List(InvestmentReturn(null, curT3.getTimestampMs, "AAPL", 48.8943)), 
+      List(InvestmentReturn(null, curT4.getTimestampMs, "AAPL", 54.9304)))
+        
     testOperation[TickData, InvestmentReturn](input, MarketTickProcessor.createInvestmentReturns(spaceUrl) _, expectedInvestmentReturns, ordered = true)
   }
 
@@ -105,19 +116,19 @@ class MarketTickProcessorSpec extends FunSuite with Matchers with StreamingSuite
     val curTime = System.currentTimeMillis()
     val count = 2
 
-    val ir1 = InvestmentReturn(null, curTime, null, 0.1)
-    val ir11 = InvestmentReturn(null, curTime, null, 0.16)
+    val ir1 = InvestmentReturn(null, curTime, "TEST1", 0.1)
+    val ir11 = InvestmentReturn(null, curTime, "TEST2", 0.16)
 
     val oneSec = (1 seconds).toMillis
 
-    val ir2 = InvestmentReturn(null, curTime + oneSec, null, 0.2)
-    val ir21 = InvestmentReturn(null, curTime + oneSec, null, 0.32)
+    val ir2 = InvestmentReturn(null, curTime + oneSec, "TEST1", 0.2)
+    val ir21 = InvestmentReturn(null, curTime + oneSec, "TEST2", 0.32)
 
-    val ir3 = InvestmentReturn(null, curTime + 2 * oneSec, null, 0.3)
-    val ir31 = InvestmentReturn(null, curTime + 2 * oneSec, null, 0.2)
+    val ir3 = InvestmentReturn(null, curTime + 2 * oneSec, "TEST1", 0.3)
+    val ir31 = InvestmentReturn(null, curTime + 2 * oneSec, "TEST2", 0.2)
 
-    val ir4 = InvestmentReturn(null, curTime + 3 * oneSec, null, 0.4)
-    val ir41 = InvestmentReturn(null, curTime + 3 * oneSec, null, 0.35)
+    val ir4 = InvestmentReturn(null, curTime + 3 * oneSec, "TEST1", 0.4)
+    val ir41 = InvestmentReturn(null, curTime + 3 * oneSec, "TEST2", 0.35)
 
     val input = List(List(ir1, ir2, ir11, ir3), List(ir21, ir31, ir4, ir41))
     val expected = List(List(MarketReturn(null, curTime, 0.13, 0.0018, false)),
@@ -134,6 +145,44 @@ class MarketTickProcessorSpec extends FunSuite with Matchers with StreamingSuite
     }
 
     val rdd = sc.emptyRDD[(Long, (Double, Double, Int))]
-    testOperation[InvestmentReturn, MarketReturn](input, MarketTickProcessor.createMarketReturns(2)(rdd) _, expected, ordered = true)
+    testOperation[InvestmentReturn, MarketReturn](input, MarketTickProcessor.createMarketReturns(2, rdd) _, expected, ordered = true)
+  }
+  
+  test("creating CharacteristicLine") {
+      val curTime = System.currentTimeMillis()
+      val oneSec = (1 seconds).toMillis
+      
+      val ir11 = InvestmentReturn(null, curTime, "TEST1", 0.1)
+      val ir21 = InvestmentReturn(null, curTime + oneSec, "TEST1", 0.2)
+      val ir31 = InvestmentReturn(null, curTime + 2 * oneSec, "TEST1", 0.32)
+      
+      val ir12 = InvestmentReturn(null, curTime, "TEST2", 0.32)
+      val ir22 = InvestmentReturn(null, curTime + oneSec, "TEST2", 0.35)
+      val ir32 = InvestmentReturn(null, curTime + 2 * oneSec, "TEST2", 0.4)
+      
+      datagrid.writeMultiple(Array(ir11, ir12, ir21, ir22, ir31, ir32))
+      
+      val mr1 = MarketReturn(null, curTime, 0.21, 0.11, false)
+      val mr2 = MarketReturn(null, curTime + oneSec, 0.275, 0.075, false)
+      val mr3 = MarketReturn(null, curTime + 2 * oneSec, 0.36, 0.0032, false)
+
+      val input = List(List(mr1, mr2, mr3))
+      
+      // calculated in Excel
+      val expected = List(List(CharacteristicLine(null, curTime + 2 * oneSec, "TEST1", -0.20567, 0.010295, 0.130815, 1.463918, 0.035712, 0.453769, 0.003799), 
+          CharacteristicLine(null, curTime + 2 * oneSec, "TEST2", 0.20567, 0.010295, 0.130815, 0.536082, 0.035712, 0.453769, 0.003799)))
+      
+      implicit val clEquality = new Equality[CharacteristicLine] {
+      override def areEqual(a: CharacteristicLine, b: Any): Boolean =
+        b match {
+          case n: CharacteristicLine => {
+            n.canEqual(a) && a.timestampMs == n.timestampMs && a.a === n.a +- .00001 && a.aConfidenceIntervalMagnitude === n.aConfidenceIntervalMagnitude +- .00001 && a.aVariance === n.aVariance +- .00001 && a.b === n.b +- .00001 && a.bConfidenceIntervalMagnitude === n.bConfidenceIntervalMagnitude +- .00001 && a.bVariance === n.bVariance +- .00001
+          }
+          case _ => false
+        }
+     }
+
+      val rdd = sc.emptyRDD[(String, SimpleRegression)]
+      testOperation[MarketReturn, CharacteristicLine](input, MarketTickProcessor.calculateAlphaAndBetas(3, rdd) _, expected, ordered = false)
   }
 }

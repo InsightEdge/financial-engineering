@@ -24,6 +24,10 @@ object TickerSymbols extends SpaceUsage {
     val qry = new SQLQuery[TickerSymbol](clazz, "")
     space.readMultiple(qry).toSeq
   }
+  
+  def count(): Int = {
+    space.count(new TickerSymbol)
+  }
 
   /**
    * Makes an [[com.gigaspaces.query.IdQuery]] for [[TickerSymbol]]s

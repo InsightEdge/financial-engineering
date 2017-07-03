@@ -19,7 +19,9 @@ libraryDependencies ++= Seq(
   "org.gigaspaces" % "xap-datagrid" % xapVersion % "provided" exclude("javax.jms", "jms"),
   "org.springframework" % "spring-core" % springVersion % "provided",
   "org.springframework" % "spring-tx" % springVersion % "provided",
+  "org.apache.commons" % "commons-math3" % "3.6.1",
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
+ // "net.manub" %% "scalatest-embedded-kafka" % "0.5.0-kafka08" % "test",
   "net.manub" %% "scalatest-embedded-kafka" % "0.10.0" % "test",
   "com.holdenkarau" %% "spark-testing-base" % "1.6.0_0.6.0" % "test"
 )

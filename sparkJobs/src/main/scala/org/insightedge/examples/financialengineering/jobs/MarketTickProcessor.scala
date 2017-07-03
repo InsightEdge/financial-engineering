@@ -16,7 +16,8 @@ import org.insightedge.examples.financialengineering.kafka.MarketTickDecoder
 import org.insightedge.examples.financialengineering.model.InvestmentHelp.Help
 import org.insightedge.examples.financialengineering.model._
 import org.insightedge.examples.financialengineering.repos.TickerSymbols
-import org.insightedge.examples.financialengineering.finance.SimpleRegressionModel
+import org.apache.commons.math3.stat.regression.SimpleRegression
+import org.apache.commons.math3.distribution.TDistribution
 
 import org.insightedge.spark.implicits.all._
 
@@ -38,14 +39,12 @@ object MarketTickProcessor extends App with SparkUsage with SpaceUsage {
 
   import org.apache.spark.streaming.kafka._
 
-  val topics = TickerSymbols.all().map(s => (s.getAbbreviation)).toSet
-
   val ssc: StreamingContext = makeStreamingContext()
 
   val marketTickStream: DStream[(String, MarketTick)] = KafkaUtils.createDirectStream[String, MarketTick, StringDecoder, MarketTickDecoder](
     ssc,
     KafkaSettings.kafkaParams,
-    topics)
+    Set(KafkaSettings.kafkaTopic))
 
   val tickStream = createTickData(marketTickStream)
   tickStream.cache()
@@ -56,12 +55,15 @@ object MarketTickProcessor extends App with SparkUsage with SpaceUsage {
   investmentReturnStream.cache()
   investmentReturnStream.saveToGrid()
 
-  val initialRDD = sc.parallelize(List.empty[(Long, (Double, Double, Int))])
-  val marketReturnStream = createMarketReturns(topics.size)(initialRDD)(investmentReturnStream)
+  val symbolCount = TickerSymbols.count()
+
+  val mrInitialRDD = sc.parallelize(List.empty[(Long, (Double, Double, Int))])
+  val marketReturnStream = createMarketReturns(symbolCount, mrInitialRDD)(investmentReturnStream)
   marketReturnStream.cache()
   marketReturnStream.saveToGrid()
 
-  val characteristicLineStream = calculateAlphaAndBetas(marketReturnStream)
+  val clInitialRDD = sc.parallelize(List.empty[(String, SimpleRegression)])
+  val characteristicLineStream = calculateAlphaAndBetas(CoreSettings.characterLineFrequency, clInitialRDD)(marketReturnStream)
   characteristicLineStream.saveToGrid()
 
   ssc.start()
@@ -75,10 +77,10 @@ object MarketTickProcessor extends App with SparkUsage with SpaceUsage {
       val spaceProxy = makeClusteredProxy(spaceUrl)
 
       val tickData = tick.toIterable
-      
+
       tickData.map { cur =>
         val monthAgoTicks = tickData.collect { case other if isMonthAgoTick(cur, other) => other }
-        
+
         val monthAgoTick = if (monthAgoTicks.isEmpty) {
           loadMonthAgoTick(cur, spaceProxy)
         } else {
@@ -86,66 +88,81 @@ object MarketTickProcessor extends App with SparkUsage with SpaceUsage {
         }
         cur -> monthAgoTick
       }
-        .collect { case (cur, Some(old)) => Investment(cur, old) }
-        .map(inv => new InvestmentReturn(null, inv.getEndDateMs, inv, inv.compoundAnnualGrowthRate()))
+        .collect { case (cur, Some(old)) => (cur.getSymbol(), Investment(cur, old)) }
+        .map { case (sym, inv) => new InvestmentReturn(null, inv.endDateMs, sym, inv.compoundAnnualGrowthRate()) }
         .toIterator
     }, false)
   }
 
-  def createMarketReturns(symbolsCount: Int)(initialRDD: RDD[(Long, (Double, Double, Int))])(investmentReturnStream: DStream[InvestmentReturn]): DStream[MarketReturn] = {
-    val calculateSumAndSquaredSum = (ts: Long, inv: Option[InvestmentReturn], state: State[(Double, Double, Int)]) => {
-      val percentageRateOfReturn = inv match {
-        case Some(i) => i.getPercentageRateOfReturn()
-        case None => 0
-      }
+  def createMarketReturns(symbolsCount: Int, initialRDD: RDD[(Long, (Double, Double, Int))])(investmentReturnStream: DStream[InvestmentReturn]): DStream[MarketReturn] = {
+    val calculate = (ts: Long, inv: Option[Double], state: State[(Double, Double, Int)]) => {
+
+      val percentageRateOfReturn = inv.getOrElse(0d)
       val (acc, squareAcc, count) = state.getOption.getOrElse((0.0, 0.0, 0))
 
       val sum = percentageRateOfReturn + acc
       val squareSum = percentageRateOfReturn * percentageRateOfReturn + squareAcc
+      val newCount = count + 1
 
-      val output = (sum, squareSum, count + 1)
-      state.update(output)
-      ts -> output
-    }
+      if (newCount < symbolsCount) {
+        state.update((sum, squareSum, newCount))
+        None
+      } else {
+        state.remove()
+        val mean = sum / newCount
+        val variance = (squareSum - sum * sum / newCount) / count
+        Some(new MarketReturn(null, ts, mean, variance, false))
+      }
+    }: Option[MarketReturn]
 
-    val sumStream = investmentReturnStream.map(i => (i.getTimestampMs, i)).mapWithState(StateSpec.function(calculateSumAndSquaredSum).initialState(initialRDD))
-
-    sumStream.filter { case (_, (_, _, count)) => count == symbolsCount }.map {
-      case (ts, (sum, squareSum, count)) =>
-        val variance = (squareSum - sum * sum / count) / (count - 1)
-        new MarketReturn(null, ts, sum / count, variance, false)
-    }
+    investmentReturnStream.map(i => (i.getTimestampMs, i.getPercentageRateOfReturn))
+      .mapWithState(StateSpec.function(calculate).initialState(initialRDD))
+      .transform(rdd => rdd.collect { case Some(marketReturn) => marketReturn })
   }
 
-  def calculateAlphaAndBetas(marketReturnStream: DStream[MarketReturn]): DStream[CharacteristicLine] = {
-    val invReturnsPerMonthParams = (marketReturn: MarketReturn) => {
-      val time = marketReturn.getTimestampMs
-      Seq(time, time - CoreSettings.msPerMonth)
-    }
+  def calculateAlphaAndBetas(frequency: Long, initialRDD: RDD[(String, SimpleRegression)])(marketReturnStream: DStream[MarketReturn]): DStream[CharacteristicLine] = {
+    val accumulateRegressors = (tickerSymbol: String, pair: Option[(MarketReturn, InvestmentReturn)], state: State[SimpleRegression]) => {
+      val simpleRegression = state.getOption.getOrElse(new SimpleRegression(true))
+      if (pair.isDefined) {
+        val (mr, ir) = pair.get
+        simpleRegression.addData(mr.getPercentageRateOfReturn, ir.getPercentageRateOfReturn)
+        val n = simpleRegression.getN
+        if (n < frequency) {
+          state.update(simpleRegression)
+          None
+        } else {
+          state.remove()
 
-    marketReturnStream.transform(mrRdd =>
-      mrRdd.zipWithGridSql[InvestmentReturn]("timestampMs <= ? AND timestampMs >= ?", invReturnsPerMonthParams, None)
+          val distribution = new TDistribution(n - 2L)
+          val aStdErr = simpleRegression.getInterceptStdErr
+          val aConfidenceInterval = distribution.inverseCumulativeProbability(1 - CoreSettings.confidenceIntervalAlpha / 2.0D) * aStdErr
+
+          Some(new CharacteristicLine(
+            id = null,
+            timestampMs = mr.getTimestampMs(),
+            tickerSymbol = tickerSymbol,
+            a = simpleRegression.getIntercept,
+            aVariance = aStdErr,
+            aConfidenceIntervalMagnitude = aConfidenceInterval,
+            b = simpleRegression.getSlope,
+            bConfidenceIntervalMagnitude = simpleRegression.getSlopeConfidenceInterval(CoreSettings.confidenceIntervalAlpha),
+            bVariance = simpleRegression.getSlopeStdErr,
+            modelErrorVariance = Math.sqrt(simpleRegression.getMeanSquareError)))
+        }
+      } else {
+        None
+      }
+    }: Option[CharacteristicLine]
+
+    marketReturnStream.transform(mrRdd => {
+      mrRdd.zipWithGridSql[InvestmentReturn]("timestampMs = ?", (marketReturn: MarketReturn) => Seq(marketReturn.getTimestampMs.asInstanceOf[Object]), None)
         .flatMap {
           case (mr, irSeq) =>
-            irSeq.groupBy(_.getInvestment().getId()).map {
-              case (investmentId, irSeq) =>
-                val regressors = irSeq.map(ir => (ir.getPercentageRateOfReturn, mr.getPercentageRateOfReturn()))
-                val (a, aVar, aConfMag, b, bVar, bConfMag, mVar) = SimpleRegressionModel.leastSquares(regressors)
-
-                new CharacteristicLine(
-                  id = null,
-                  timestampMs = mr.getTimestampMs(),
-                  investmentId = investmentId,
-                  a = a,
-                  aVariance = aVar,
-                  aConfidenceIntervalMagnitude = aConfMag,
-                  b = b,
-                  bVariance = bVar,
-                  bConfidenceIntervalMagnitude = bConfMag,
-                  modelErrorVariance = mVar)
-            }
+            irSeq.groupBy(_.getTickerSymbol).flatMap { case (sym, invReturnSeq) => invReturnSeq.map(ir => (sym, (mr, ir))) }
         }
-     )
+    })
+      .mapWithState(StateSpec.function(accumulateRegressors).initialState(initialRDD))
+      .transform(rdd => rdd.collect { case Some(cl) => cl })
   }
 
   def loadMonthAgoTick(tick: TickData, space: GigaSpace): Option[TickData] = {

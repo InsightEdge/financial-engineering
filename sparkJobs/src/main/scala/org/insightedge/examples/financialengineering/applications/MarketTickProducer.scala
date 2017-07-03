@@ -10,6 +10,7 @@ import scala.io.Source
 import org.apache.kafka.clients.producer.{Producer, ProducerRecord}
 import org.insightedge.examples.financialengineering.CoreSettings
 import org.insightedge.examples.financialengineering.model.{MarketTick, TickerSymbol}
+import org.insightedge.examples.financialengineering.KafkaSettings
 
 case class MarketTickProducer(baseDir: String, ts: TickerSymbol, producer: Producer[String, MarketTick]) extends Runnable {
   
@@ -30,7 +31,7 @@ case class MarketTickProducer(baseDir: String, ts: TickerSymbol, producer: Produ
       reader = Source.fromFile(filename)
       reader.getLines().foreach { line =>
         if (!line.isEmpty) {
-          producer.send(new ProducerRecord(abbr, abbr, MarketTick(line)))
+          producer.send(new ProducerRecord(KafkaSettings.kafkaTopic, abbr, MarketTick(line)))
         }
       }
       retry = 0
