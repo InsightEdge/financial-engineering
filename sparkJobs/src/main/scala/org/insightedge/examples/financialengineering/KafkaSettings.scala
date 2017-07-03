@@ -1,5 +1,5 @@
 package org.insightedge.examples.financialengineering
-
+import collection.JavaConverters._
 /**
   * Created by IntelliJ IDEA.
   * User: jason
@@ -7,42 +7,23 @@ package org.insightedge.examples.financialengineering
   * Time: 12:16 PM
   */
 object KafkaSettings {
+  
+  val kafkaTopic = "tickerSymbols"
+  
+  private val bootstrapServers = "localhost:9092"
+  private val bootstrapServersKey = "bootstrap.servers"
 
-  val kafkaBrokers = "127.0.0.1:9092"
-
-  val testSymbol = "UTX"
-
-  private val bootstrapServersConfig = "bootstrap.servers"
-  private val bootstrapServersValue = kafkaBrokers
-  private val brokers = kafkaBrokers
-  private val keySerializerConfig = "key.serializer"
-  private val valueSerializerConfig = "value.serializer"
-  private val serializerClassConfig = "serializer.class"
-  private val brokerListConfig = "metadata.broker.list"
-
-  val kafkaParams: Map[String, String] = Map[String, String](
-    KafkaSettings.brokerListConfig -> KafkaSettings.kafkaBrokers,
-    "auto.offset.reset" -> "smallest"
+  def kafkaParams() = Map[String, String](
+     bootstrapServersKey -> bootstrapServers,
+     "auto.offset.reset" -> "smallest"
   )
 
-  def kafkaProducerProperties(): java.util.Map[String, Object] = {
-    val props = new java.util.HashMap[String, Object]()
-    props.put(bootstrapServersConfig, bootstrapServersValue)
-    props.put(keySerializerConfig,
-      "org.apache.kafka.common.serialization.StringSerializer")
-    props.put(valueSerializerConfig,
-      classOf[org.insightedge.examples.financialengineering.kafka.MarketTickSerializer].getName)
-    props
-  }
-
-  def kafkaConsumerProperties(): Map[String, String] = {
-    Map[String, String](
-      brokerListConfig -> s"$brokers",
-      bootstrapServersConfig -> bootstrapServersValue,
-      "request.required.acks" -> "1",
-      serializerClassConfig -> "kafka.serializer.StringEncoder",
-      "partitioner.class" -> "example.producer.SimplePartitioner"
-    )
-  }
-
+  def kafkaProducerProperties(): java.util.Map[String, Object] = Map[String, Object](
+    bootstrapServersKey -> bootstrapServers,
+    "request.required.acks" -> "0",
+    "producer.type" -> "sync",
+    "key.serializer" -> "org.apache.kafka.common.serialization.StringSerializer",
+    "value.serializer" -> classOf[org.insightedge.examples.financialengineering.kafka.MarketTickSerializer].getName,
+    "partitioner.class" -> "kafka.producer.ByteArrayPartitioner"
+  ).asJava
 }

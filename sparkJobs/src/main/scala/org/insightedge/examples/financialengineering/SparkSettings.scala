@@ -8,18 +8,10 @@ package org.insightedge.examples.financialengineering
   */
 object SparkSettings {
 
-  val ingestionFrequencyMilliseconds = 1
-  val ingestionAppName = "KafkaToSpaceIngestion"
-  val ingestContextFrequencyMilliseconds = 2000
+  val sparkAppName = "CalcIndividualAndMarketReturn"
+  val sparkContextFrequencyMs = 2000
 
-  val calcIndividualFrequencyMilliseconds = 1
-  val calcIndividualAppName = "CalcIndividualReturn"
-  val calcIndividualContextFrequencyMilliseconds = 2000
-
-  val calcMarketReturnFrequencyMilliseconds = 1
-  val calcMarketReturnAppName = "CalcMarketReturnReturn"
-  val calcMarketReturnContextFrequencyMilliseconds = 2000
-
-  val sparkMasterUrl = "local[*]"
+  val sparkMasterUrl = "spark://127.0.0.1:7077"
+  val sparkCheckpointDir = "/tmp"
 
 }

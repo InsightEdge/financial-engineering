@@ -2,7 +2,7 @@ package org.insightedge.examples.financialengineering.model
 
 import org.insightedge.scala.annotation.{SpaceId, SpaceIndex}
 
-import scala.beans.BeanProperty
+import scala.beans.{BeanProperty, BooleanBeanProperty}
 
 /**
   * Created by IntelliJ IDEA.
@@ -22,7 +22,7 @@ case class MarketReturn(
                          var percentageRateOfReturn: Double,
                          @BeanProperty
                          var variance: Double,
-                         @BeanProperty
+                         @BooleanBeanProperty
                          var processed: Boolean
                        ) {
   def this() = this(null, timestampMs = -1, percentageRateOfReturn = -1, variance = -1, processed = false)

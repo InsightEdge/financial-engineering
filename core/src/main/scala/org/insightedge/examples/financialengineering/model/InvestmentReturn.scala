@@ -17,7 +17,7 @@ case class InvestmentReturn(@SpaceId(autoGenerate = true)
                             @BeanProperty
                             var timestampMs: Long,
                             @BeanProperty
-                            var investmentId: String,
+                            var tickerSymbol: String,
                             @BeanProperty
                             var percentageRateOfReturn: Double
                            ) {

@@ -1,4 +1,3 @@
-
 val insightEdgeVersion = "1.0.0"
 val xapVersion = "12.0.1"
 
@@ -22,7 +21,7 @@ lazy val core = project.
   settings(
     assemblyJarName := "core.jar"
   )
-lazy val demoSetup = project.dependsOn(core).
+lazy val demoSetup = project.dependsOn(core % "test->compile;test->test;compile->compile").
   settings(commonSettings: _*).
   settings(
     assemblyJarName := "setup.jar"
@@ -34,7 +33,7 @@ lazy val processingUnit = project.
     assemblyJarName := "demoPU.jar"
   )
 lazy val sparkJobs = project.
-  dependsOn(core, demoSetup).
+  dependsOn(core % "test->compile;test->test;compile->compile").
   settings(commonSettings).
   settings(
     assemblyJarName := "sparkjobs.jar"

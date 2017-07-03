@@ -18,7 +18,7 @@ case class CharacteristicLine(
                                @BeanProperty
                                var timestampMs: Long,
                                @BeanProperty
-                               var investmentId: String,
+                               var tickerSymbol: String,
                                @BeanProperty
                                var a: Double,
                                @BeanProperty

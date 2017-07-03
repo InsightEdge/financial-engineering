@@ -27,7 +27,7 @@
     <os-core:annotation-support />
 
     <!-- Enables using @Polling and @Notify annotations to creating polling and notify containers  -->
-    <os-events:annotation-support />
+    <!-- <os-events:annotation-support /> -->
 
     <!--
         A bean representing a Space. Here we configure an embedded space. Note

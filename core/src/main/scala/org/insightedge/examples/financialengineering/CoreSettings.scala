@@ -9,31 +9,22 @@ package org.insightedge.examples.financialengineering
   */
 object CoreSettings {
 
-
   val timeZone: String = "America/New_York"
   val daysPerYear: Short = 360
-  val msPerDay: Long = 24 * 60 * 1000
+  val msPerDay: Long = 24 * 60 * 60 * 1000
   val msPerMonth: Long = 30 * msPerDay
 
+  val ticksWindowMs: Long = 3 * msPerDay
   val tradingDaysPerMonth: Short = 21
   val ticksPerDay: Int = 440
   val ticksPerMonth: Long = ticksPerDay * tradingDaysPerMonth
 
-  val feedAppName = "TickDataFromCsvFeed"
-
-  val processorAppName = "ProcessTicks"
-  val processTicksThreads = 1
-  val processTickFrequencyMs = 750
-
-  val ingestionThreadsPerSymbol = 1
-  val calcIndividualThreadsPerSymbol = 1
-  val calcMarketReturnThreadsPerSymbol = 1
-
-  val spaceName = "fin-eng-space"
-  val spaceLookupGroups = "xap-12.0.1"
-  // private val spaceLookupLocators = "localhost:7102"
+  val spaceName = "finEngSpace"
+  val spaceLookupGroups = "xap-12.0.0"
   val spaceLookupLocators = "localhost"
-//  val spaceLookupLocators = "macattack"
-  val remoteJiniUrl = s"jini://$spaceLookupLocators/*/$spaceName"
+  
+  val characterLineFrequency = 30
+  val confidenceIntervalAlpha = 0.05
 
+  val remoteJiniUrl = s"jini://$spaceLookupLocators/*/$spaceName?groups=$spaceLookupGroups"
 }
