@@ -18,28 +18,23 @@ lazy val commonSettings = Seq(
 
 lazy val core = project.
   settings(commonSettings: _*).
-  settings(
-    assemblyJarName := "core.jar"
-  )
+  settings(assemblyJarName := "core.jar")
 lazy val demoSetup = project.dependsOn(core % "test->compile;test->test;compile->compile").
   settings(commonSettings: _*).
-  settings(
-    assemblyJarName := "setup.jar"
-  )
+  settings(assemblyJarName := "setup.jar")
 lazy val processingUnit = project.
   dependsOn(core).
   settings(commonSettings).
-  settings(
-    assemblyJarName := "demoPU.jar"
-  )
+  settings(assemblyJarName := "demoPU.jar")
 lazy val sparkJobs = project.
   dependsOn(core % "test->compile;test->test;compile->compile").
   settings(commonSettings).
-  settings(
-    assemblyJarName := "sparkjobs.jar"
-  )
-lazy val web = project.settings(commonSettings)
-
+  settings(assemblyJarName := "sparkjobs.jar")
+lazy val web = project.
+  dependsOn(core).
+  settings(commonSettings).
+  disablePlugins(sbtassembly.AssemblyPlugin)
+  
 lazy val root = (project in file(".")).
   settings(commonSettings, organization := orgPrefix, name := coreName)
   .aggregate(core, demoSetup, processingUnit, sparkJobs, web)

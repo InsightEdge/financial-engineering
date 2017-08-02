@@ -2,6 +2,7 @@ package org.insightedge.examples.financialengineering.model
 
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 import org.insightedge.examples.financialengineering.CoreSettings
 
@@ -12,23 +13,22 @@ import org.insightedge.examples.financialengineering.CoreSettings
   * Time: 10:19 AM
   *
   */
-case class MarketTick(timestamp: Long, open: Double, high: Double, low: Double, close: Double, volume: Double, splits: Double, earnings: Double, dividends: Double) {
+case class MarketTick(timestamp: Long, dateAsStr: String, open: Double, high: Double, low: Double, close: Double, volume: Double, splits: Double, earnings: Double, dividends: Double) {
    
-  override def toString = s"$timestamp,$open,$high,$low,$close,$volume,$splits,$earnings,$dividends"
+  override def toString = s"$timestamp,$dateAsStr,$open,$high,$low,$close,$volume,$splits,$earnings,$dividends"
 
 }
 
 object MarketTick {
   
-  def calculateTimestamp(date: String, time: String):Long = {
+  def calculateTimestamp(date: String, time: String): ZonedDateTime = {
     val (year, monthAndDay) = date.splitAt(4)
     val (month, day) = monthAndDay.splitAt(2)
     val (hour, minute) = time.length match {
       case 3 => time splitAt 1
       case 4 => time splitAt 2
     }
-    val tickTime = ZonedDateTime.of(year.toInt, month.toInt, day.toInt, hour.toInt, minute.toInt, 0, 0, ZoneId.of(CoreSettings.timeZone))
-    tickTime.toInstant.toEpochMilli()
+    ZonedDateTime.of(year.toInt, month.toInt, day.toInt, hour.toInt, minute.toInt, 0, 0, ZoneId.of(CoreSettings.timeZone))
   }
 
   /**
@@ -38,9 +38,11 @@ object MarketTick {
    */
   def apply(content: String) = {
     val values = content.split(",")
-    val timestamp = calculateTimestamp(values(0), values(1))
+    val date = calculateTimestamp(values(0), values(1))
+    val dateAsStr = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(date)
     new MarketTick(
-      timestamp,
+      date.toInstant.toEpochMilli(),
+      dateAsStr,
       open = values(2).toDouble,
       high = values(3).toDouble,
       low = values(4).toDouble,

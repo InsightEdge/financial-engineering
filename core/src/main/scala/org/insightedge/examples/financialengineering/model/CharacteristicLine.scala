@@ -1,6 +1,6 @@
 package org.insightedge.examples.financialengineering.model
 
-import org.insightedge.scala.annotation.SpaceId
+import org.insightedge.scala.annotation.{SpaceId, SpaceRouting}
 
 import scala.beans.BeanProperty
 
@@ -18,6 +18,9 @@ case class CharacteristicLine(
                                @BeanProperty
                                var timestampMs: Long,
                                @BeanProperty
+                               var dateAsStr: String,
+                               @BeanProperty
+                               @SpaceRouting
                                var tickerSymbol: String,
                                @BeanProperty
                                var a: Double,
@@ -34,5 +37,5 @@ case class CharacteristicLine(
                                @BeanProperty
                                var modelErrorVariance: Double
                              ) {
-  def this() = this(null, -1L, null, -1D, -1D, -1D, -1D, -1D, -1D, -1D)
+  def this() = this(null, -1L, null, null, -1D, -1D, -1D, -1D, -1D, -1D, -1D)
 }

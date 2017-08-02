@@ -1,6 +1,6 @@
 package org.insightedge.examples.financialengineering.model
 
-import org.insightedge.scala.annotation.{SpaceId, SpaceIndex}
+import org.insightedge.scala.annotation.{SpaceId, SpaceIndex, SpaceRouting}
 
 import scala.beans.BeanProperty
 
@@ -17,9 +17,12 @@ case class InvestmentReturn(@SpaceId(autoGenerate = true)
                             @BeanProperty
                             var timestampMs: Long,
                             @BeanProperty
+                            var dateAsStr: String,
+                            @BeanProperty
+                            @SpaceRouting
                             var tickerSymbol: String,
                             @BeanProperty
                             var percentageRateOfReturn: Double
                            ) {
-  def this() = this(null, 0L, null, 0D)
+  def this() = this(null, 0L, null, null, 0D)
 }
