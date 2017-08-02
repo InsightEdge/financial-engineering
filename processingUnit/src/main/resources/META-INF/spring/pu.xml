@@ -26,8 +26,7 @@
     <!-- Enable @PostPrimary and others annotation support. -->
     <os-core:annotation-support />
 
-    <!-- Enables using @Polling and @Notify annotations to creating polling and notify containers  -->
-    <!-- <os-events:annotation-support /> -->
+    <os-remoting:annotation-support />
 
     <!--
         A bean representing a Space. Here we configure an embedded space. Note
@@ -41,6 +40,8 @@
 
     <!-- Define the GigaSpace instance that the application will use to access the space  -->
     <os-core:giga-space id="gigaSpace" space="fin-eng-space" tx-manager="transactionManager"/>
+    
+    <os-remoting:service-exporter id="serviceExporter" />
 
 </beans>
 

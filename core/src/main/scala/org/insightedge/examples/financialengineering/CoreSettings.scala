@@ -23,7 +23,7 @@ object CoreSettings {
   val spaceLookupGroups = "xap-12.0.0"
   val spaceLookupLocators = "localhost"
   
-  val characterLineFrequency = 30
+  val characterLineFrequency = 100
   val confidenceIntervalAlpha = 0.05
 
   val remoteJiniUrl = s"jini://$spaceLookupLocators/*/$spaceName?groups=$spaceLookupGroups"

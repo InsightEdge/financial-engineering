@@ -27,7 +27,7 @@ import com.j_spaces.core.client.SQLQuery
 
 import kafka.serializer.StringDecoder
 import java.time.{ ZonedDateTime, ZoneId, Instant }
-
+import java.time.format.DateTimeFormatter
 /**
  * User: jason nerothin
  *
@@ -70,6 +70,8 @@ object MarketTickProcessor extends App with SparkUsage with SpaceUsage {
   ssc.awaitTermination()
   sc.stopInsightEdgeContext()
 
+  implicit def formatTs(ts: Long) = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(ZonedDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.of(CoreSettings.timeZone)))
+  
   def createTickData(marketTickStream: DStream[(String, MarketTick)]): DStream[TickData] = marketTickStream.map[TickData] { case (sym, t) => TickData(sym, t) }
 
   def createInvestmentReturns(spaceUrl: String = CoreSettings.remoteJiniUrl)(tickStream: DStream[TickData]): DStream[InvestmentReturn] = {
@@ -89,7 +91,7 @@ object MarketTickProcessor extends App with SparkUsage with SpaceUsage {
         cur -> monthAgoTick
       }
         .collect { case (cur, Some(old)) => (cur.getSymbol(), Investment(cur, old)) }
-        .map { case (sym, inv) => new InvestmentReturn(null, inv.endDateMs, sym, inv.compoundAnnualGrowthRate()) }
+        .map { case (sym, inv) => new InvestmentReturn(null, inv.endDateMs, inv.endDateMs, sym, inv.compoundAnnualGrowthRate()) }
         .toIterator
     }, false)
   }
@@ -111,7 +113,7 @@ object MarketTickProcessor extends App with SparkUsage with SpaceUsage {
         state.remove()
         val mean = sum / newCount
         val variance = (squareSum - sum * sum / newCount) / count
-        Some(new MarketReturn(null, ts, mean, variance, false))
+        Some(new MarketReturn(null, ts, ts, mean, variance))
       }
     }: Option[MarketReturn]
 
@@ -137,10 +139,7 @@ object MarketTickProcessor extends App with SparkUsage with SpaceUsage {
           val aStdErr = simpleRegression.getInterceptStdErr
           val aConfidenceInterval = distribution.inverseCumulativeProbability(1 - CoreSettings.confidenceIntervalAlpha / 2.0D) * aStdErr
 
-          Some(new CharacteristicLine(
-            id = null,
-            timestampMs = mr.getTimestampMs(),
-            tickerSymbol = tickerSymbol,
+          Some(new CharacteristicLine(null, mr.getTimestampMs(), mr.getDateAsStr(), tickerSymbol,
             a = simpleRegression.getIntercept,
             aVariance = aStdErr,
             aConfidenceIntervalMagnitude = aConfidenceInterval,

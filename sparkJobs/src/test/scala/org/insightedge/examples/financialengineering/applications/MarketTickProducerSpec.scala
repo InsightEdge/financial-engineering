@@ -42,11 +42,11 @@ class MarketTickProducerSpec extends WordSpec with EmbeddedKafka with Consumers 
           val res = consumer.poll(5000).records(new TopicPartition(KafkaSettings.kafkaTopic, 0)).asScala.map(cr => cr.value())
 
           //'allstocks_19980106' file
-          val mt1 = MarketTick(884095680000l, 0.5166, 0.5166, 0.5166, 0.5166, 61481.0, 28.0, 0.0, 0.0)
-          val mt2 = MarketTick(884096640000l, 0.5205, 0.5205, 0.5205, 0.5205, 30740.5, 28.0, 0.0, 0.0)
+          val mt1 = MarketTick(884095680000l, "1998-01-06", 0.5166, 0.5166, 0.5166, 0.5166, 61481.0, 28.0, 0.0, 0.0)
+          val mt2 = MarketTick(884096640000l, "1998-01-06", 0.5205, 0.5205, 0.5205, 0.5205, 30740.5, 28.0, 0.0, 0.0)
           //'allstocks_19980107' file
-          val mt3 = MarketTick(884178840000l, 0.6142, 0.6142, 0.6142, 0.6142, 107592.0, 28.0, 0.0, 0.0)
-          val mt4 = MarketTick(884179560000l, 0.6142, 0.6142, 0.6142, 0.6142, 30740.5, 28.0, 0.0, 0.0)
+          val mt3 = MarketTick(884178840000l, "1998-01-07", 0.6142, 0.6142, 0.6142, 0.6142, 107592.0, 28.0, 0.0, 0.0)
+          val mt4 = MarketTick(884179560000l, "1998-01-07", 0.6142, 0.6142, 0.6142, 0.6142, 30740.5, 28.0, 0.0, 0.0)
           
           res.size should be (4)
           res should contain theSameElementsInOrderAs List(mt1, mt2, mt3, mt4)

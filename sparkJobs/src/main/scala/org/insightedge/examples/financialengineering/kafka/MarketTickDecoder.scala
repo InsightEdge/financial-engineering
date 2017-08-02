@@ -34,14 +34,15 @@ class MarketTickDecoder extends Decoder[MarketTick] with Encoder[MarketTick] {
     val values = stringDecoder.fromBytes(bytes).split(",")
     new MarketTick(
       timestamp = values(0).toLong,
-      open = values(1).toDouble,
-      high = values(2).toDouble,
-      low = values(3).toDouble,
-      close = values(4).toDouble,
-      volume = values(5).toDouble,
-      splits = values(6).toDouble,
-      earnings = values(7).toDouble,
-      dividends = if (values.length == 9) values(8).toDouble else 0
+      dateAsStr = values(1),
+      open = values(2).toDouble,
+      high = values(3).toDouble,
+      low = values(4).toDouble,
+      close = values(5).toDouble,
+      volume = values(6).toDouble,
+      splits = values(7).toDouble,
+      earnings = values(8).toDouble,
+      dividends = if (values.length == 10) values(9).toDouble else 0
     )
   }
 
